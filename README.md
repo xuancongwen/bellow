@@ -16,25 +16,48 @@ checked.
 
 ## Install
 
-1. Download `BellowFlow-<version>-macOS-arm64.dmg` (from a release, or build it
-   below). If a release ships the DMG as split parts, reassemble and verify:
+Website: **<https://xuancongwen.github.io/bellowflow/>**
+
+Open Terminal, paste this, and press Return:
+
+```sh
+curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
+```
+
+It downloads the release (about 5 GB), verifies it, puts **BellowFlow** in
+`/Applications`, and opens it. Then grant **Microphone** and **Accessibility**
+in the setup window, click **Start**, wait for **Ready · ⌃⌥Space to dictate**,
+and press ⌃⌥Space to talk. The script is
+[`scripts/install.sh`](scripts/install.sh); `BELLOWFLOW_VERSION=v1.0.0-rc.1`
+pins a release.
+
+<details>
+<summary>Install by hand instead</summary>
+
+1. From the [releases page](https://github.com/xuancongwen/bellowflow/releases)
+   download every `.dmg.part-*` file and the `.dmg.sha256` file. GitHub caps
+   each release asset at 2 GB, so the DMG ships in parts.
+2. Join and verify them:
 
    ```sh
+   cd ~/Downloads
    cat BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.part-* > BellowFlow-1.0.0-rc.1-macOS-arm64.dmg
    shasum -a 256 -c BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.sha256
    ```
 
-2. Open the DMG and drag **BellowFlow** to `/Applications`. Release candidates are
-   ad-hoc signed, so the first launch needs **right-click → Open** (or
-   `xattr -d com.apple.quarantine /Applications/BellowFlow.app`).
-3. The setup window stays in front while you grant **Microphone** and
-   **Accessibility**; it shows each grant as it lands. Click **Start**.
-4. First start copies the bundled model store into Application Support
-   (about 4.4 GB, once), then loads both engines. The status line reads
-   **Ready · ⌃⌥Space to dictate** when done. Later launches start automatically.
-5. Dictate: press ⌃⌥Space, speak, press it again. A small overlay shows
-   listening, transcribing, and cleaning up. Do not switch windows while it is
-   typing. Quit from the menu bar to release the models.
+3. Open the DMG and drag **BellowFlow** to `/Applications`. Release candidates
+   are ad-hoc signed, so the first launch needs **right-click → Open** (or
+   `xattr -dr com.apple.quarantine /Applications/BellowFlow.app`).
+4. Grant **Microphone** and **Accessibility** in the setup window and click
+   **Start**. First start copies the bundled model store into Application
+   Support (about 4.4 GB, once), then loads both engines. Later launches start
+   automatically.
+
+</details>
+
+Dictate: press ⌃⌥Space, speak, press it again. A small overlay shows
+listening, transcribing, and cleaning up. Do not switch windows while it is
+typing. Quit from the menu bar to release the models.
 
 No Homebrew, Python, Rust, Ollama installation, account, API key, network
 access, or model download is needed at runtime. Recording is toggle, not
@@ -192,6 +215,32 @@ parts plus the `.sha256`; the Install section shows how to reassemble. If you
 would rather offer one file, host the DMG elsewhere (Hugging Face, R2, S3) and
 link it from the release notes. Building in CI needs the runner to download
 several GB of models each time; no Apple signing secrets are assumed.
+
+`.github/workflows/pages.yml` publishes `site/` and `scripts/install.sh` to
+<https://xuancongwen.github.io/bellowflow/> on every push to `master` that
+touches them. One-time setup: repository **Settings → Pages → Source: GitHub
+Actions**.
+
+## Homebrew
+
+A cask template is in [`packaging/homebrew/bellowflow.rb`](packaging/homebrew/bellowflow.rb).
+Homebrew downloads one file per cask, so it needs the whole DMG at a single
+URL; the split parts on GitHub Releases will not do. Host the DMG on Hugging
+Face, R2, S3, or similar (or shrink it under 2 GB by downloading models on first
+launch), then:
+
+1. Create a public repository named `homebrew-bellowflow` and copy the cask to
+   `Casks/bellowflow.rb` with the real `url` and `sha256`.
+2. Users install with
+   `brew install --cask xuancongwen/bellowflow/bellowflow`. Check the cask
+   with `brew audit --cask --online` and `brew style --cask` first.
+3. Bump `version`, `url`, and `sha256` per release (`brew bump-cask-pr`, or a
+   step in the release workflow).
+
+Getting into the main `homebrew/cask` tap additionally needs a stable
+(non-pre-release) version, a Developer ID signed and notarized app, and enough
+public use to meet Homebrew's notability rules. Both remain on the
+[validation list](#validation-status).
 
 ## Validation status
 

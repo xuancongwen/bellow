@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BellowFlow</title>
+<meta name="description" content="BellowFlow is a free, open-source dictation app for Apple Silicon Macs. Press a shortcut, speak, and clean text is typed wherever you are. Everything runs on your Mac.">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1c1b18; --muted: #6b675e; --line: #e4e0d6;
+    --accent: #b5471f; --code-bg: #f1eee6; --card: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15140f; --fg: #ece8de; --muted: #a39e91; --line: #2c2a23; --accent: #f08a5d; --code-bg: #1f1d16; --card: #1b1a14; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 56px 16px 80px; }
+  h1 { font-size: 2.6rem; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.35rem; margin: 48px 0 12px; }
+  p { margin: 0 0 14px; }
+  .lead { font-size: 1.2rem; color: var(--muted); }
+  a { color: var(--accent); }
+  .kbd { font: 600 0.9em ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  pre { position: relative; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 96px 16px 16px; overflow-x: auto; font: 15px/1.5 ui-monospace, "SF Mono", Menlo, monospace; margin: 0 0 14px; }
+  pre.big { font-size: 16px; }
+  button.copy { position: absolute; top: 10px; right: 10px; font: 600 13px -apple-system, sans-serif; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button.copy:hover { border-color: var(--accent); }
+  ol, ul { padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .steps li strong { display: block; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  td { padding: 8px 10px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { width: 110px; color: var(--muted); }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
+  .callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--muted); }
+  nav a { margin-right: 18px; font-size: 0.95rem; }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="#install">Install</a><a href="#manual">Install by hand</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellowflow">Source on GitHub</a></nav>
+  <h1 style="margin-top:32px">BellowFlow</h1>
+  <p class="lead">Free, open-source dictation for your Mac. Press <span class="kbd">⌃⌥Space</span>, speak, press it again, and clean English text is typed into whatever app you are using.</p>
+  <p>Everything runs on your Mac. No account, no API key, no network access after install, and no transcripts leave the machine. Whisper transcribes, a local language model tidies up the wording, and the result is typed for you.</p>
+  <p class="meta" id="version">Latest release: <a href="https://github.com/xuancongwen/bellowflow/releases">see GitHub</a></p>
+
+  <h2 id="install">Install</h2>
+  <p>Open <strong>Terminal</strong> (it is in Applications → Utilities), paste this line, and press Return:</p>
+  <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
+  <p>That downloads the app (about 5 GB, so give it a few minutes), checks it, puts <strong>BellowFlow</strong> in your Applications folder, and opens it. Then:</p>
+  <ol class="steps">
+    <li>In the setup window, allow <strong>Microphone</strong> and <strong>Accessibility</strong> when macOS asks, and click <strong>Start</strong>.</li>
+    <li>Wait for the status to read <strong>Ready</strong>. The first start takes a minute or two while the models are copied into place.</li>
+    <li>Click into any text field, press <span class="kbd">⌃⌥Space</span>, talk, and press it again.</li>
+  </ol>
+  <p class="callout">Release candidates are not yet notarized by Apple. The installer clears the quarantine flag for you, so you will not see the "unidentified developer" warning. If you would rather not run a script, follow the steps below instead. You can <a href="https://github.com/xuancongwen/bellowflow/blob/master/scripts/install.sh">read the script</a> first.</p>
+
+  <h2 id="manual">Install by hand</h2>
+  <ol class="steps">
+    <li>Go to the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and download every <code>.dmg.part-*</code> file plus the <code>.dmg.sha256</code> file into your Downloads folder. GitHub caps each file at 2 GB, which is why the disk image comes in parts.</li>
+    <li>Open Terminal and join and verify the parts (adjust the version if needed):
+      <pre><code id="manual-cmd">cd ~/Downloads
+cat BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.part-* &gt; BellowFlow-1.0.0-rc.1-macOS-arm64.dmg
+shasum -a 256 -c BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre></li>
+    <li>Open the <code>.dmg</code> and drag <strong>BellowFlow</strong> into <strong>Applications</strong>.</li>
+    <li>The first time, <strong>right-click BellowFlow → Open</strong> and confirm, because the build is not notarized yet. Then follow the setup window as above.</li>
+  </ol>
+
+  <h2 id="requirements">Requirements</h2>
+  <table>
+    <tr><td>Mac</td><td>Apple Silicon (M1 or newer). Intel Macs are not supported.</td></tr>
+    <tr><td>macOS</td><td>13 Ventura or newer</td></tr>
+    <tr><td>Memory</td><td>16 GB minimum, 24 GB recommended. The app will not load its models on Macs with less.</td></tr>
+    <tr><td>Disk</td><td>About 15 GB free: the app plus its working copy of the models</td></tr>
+  </table>
+
+  <h2>Using it</h2>
+  <ul>
+    <li>Recording is a toggle: press <span class="kbd">⌃⌥Space</span> to start and again to stop. Recordings stop on their own at two minutes.</li>
+    <li>Stay in the same window while the text is being typed.</li>
+    <li>Quit from the menu bar icon when you want the memory back.</li>
+  </ul>
+
+  <h2>Uninstall</h2>
+  <p>Quit BellowFlow, drag it from Applications to the Trash, and delete <code>~/Library/Application Support/BellowFlow</code> to remove the models.</p>
+
+  <h2>Open source</h2>
+  <p>BellowFlow's code is <a href="https://github.com/xuancongwen/bellowflow/blob/master/LICENSE">MIT licensed</a> and built on other open projects: <a href="https://github.com/peteonrails/voxtype">VoxType</a>, <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> with Whisper large-v3-turbo, <a href="https://github.com/ollama/ollama">Ollama</a>, and Qwen 2.5 7B. Bugs and ideas go to the <a href="https://github.com/xuancongwen/bellowflow/issues">issue tracker</a>.</p>
+
+  <footer>BellowFlow · <a href="https://github.com/xuancongwen/bellowflow">GitHub</a> · <a href="https://github.com/xuancongwen/bellowflow/releases">Releases</a></footer>
+</main>
+<script>
+  document.querySelectorAll('button.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var text = document.getElementById(b.dataset.for).textContent;
+      navigator.clipboard.writeText(text).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });
+    });
+  });
+  fetch('https://api.github.com/repos/xuancongwen/bellowflow/releases?per_page=1')
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (list) {
+      if (!list.length) return;
+      var rel = list[0], el = document.getElementById('version');
+      el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
+      var m = /^v(.+)$/.exec(rel.tag_name);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.1').join(m[1]);
+    }).catch(function () {});
+</script>
+</body>
+</html>

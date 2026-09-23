@@ -52,7 +52,11 @@ jobs:
           cat > notes.md <<EOF
           Unsigned development build (ad-hoc signature). Apple Silicon, macOS 13+, 16 GB RAM minimum.
 
-          GitHub limits release assets to 2 GB, so the DMG is split. Reassemble and verify:
+          Easiest install (downloads, verifies, and installs everything):
+
+              curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
+
+          Or by hand: GitHub limits release assets to 2 GB, so the DMG is split. Reassemble and verify:
 
               cat $DMG.part-* > $DMG
               shasum -a 256 -c $DMG.sha256
