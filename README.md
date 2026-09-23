@@ -9,7 +9,7 @@ start downloads Whisper large-v3-turbo and Qwen 2.5 7B with Sam Wen's
 MIT-licensed application code. Apple Silicon, macOS 13 or newer. Formerly
 known as VoxBundle.
 
-**Status: 1.0.0-rc.2 — builds, packages, and dictates end to end on an
+**Status: 1.0.0-rc.3 — builds, packages, and dictates end to end on an
 Apple Silicon Mac; not yet Developer ID signed or notarized.** See
 [Validation status](#validation-status) for exactly what has and has not been
 checked.
@@ -29,7 +29,7 @@ It downloads the release (about 20 MB), verifies it, puts **BellowFlow** in
 in the setup window and click **Start**. The first start downloads the speech
 and cleanup models (about 5.3 GB, once; an interrupted download resumes), and
 the status reads **Ready · ⌃⌥Space to dictate** when done. The script is
-[`scripts/install.sh`](scripts/install.sh); `BELLOWFLOW_VERSION=v1.0.0-rc.2`
+[`scripts/install.sh`](scripts/install.sh); `BELLOWFLOW_VERSION=v1.0.0-rc.3`
 pins a release.
 
 <details>
@@ -205,12 +205,12 @@ right-click → Open. Do not ship an ad-hoc build as a frictionless installer.
 
 ## Releases
 
-`VERSION` is the single source of truth (`1.0.0-rc.2`): its numeric part
+`VERSION` is the single source of truth (`1.0.0-rc.3`): its numeric part
 becomes `CFBundleShortVersionString`, the full label names the DMG, and the git
 tag is `v<VERSION>`.
 
 ```sh
-git tag v1.0.0-rc.2 && git push origin master v1.0.0-rc.2
+git tag v1.0.0-rc.3 && git push origin master v1.0.0-rc.3
 ```
 
 `.github/workflows/macos.yml` builds Swift and runs the tests on every push and

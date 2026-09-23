@@ -7,7 +7,7 @@
 # 2 GB asset cap), verifies the SHA-256, copies BellowFlow.app to /Applications,
 # clears the quarantine flag (release candidates are ad-hoc signed, not notarized),
 # and opens the app. The app itself downloads its models on first start. Set
-# BELLOWFLOW_VERSION=v1.0.0-rc.2 to pin a release; the default is the newest
+# BELLOWFLOW_VERSION=v1.0.0-rc.3 to pin a release; the default is the newest
 # release, pre-releases included. Downloads go to ~/Library/Caches/BellowFlow-installer
 # and resume if the script is rerun.
 set -euo pipefail

@@ -62,7 +62,7 @@
     <li>Go to the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and download the <code>.dmg</code> file.</li>
     <li>Optional: download the <code>.dmg.sha256</code> file next to it and check the download in Terminal:
       <pre><code id="manual-cmd">cd ~/Downloads
-shasum -a 256 -c BellowFlow-1.0.0-rc.2-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre></li>
+shasum -a 256 -c BellowFlow-1.0.0-rc.3-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre></li>
     <li>Open the <code>.dmg</code> and drag <strong>BellowFlow</strong> into <strong>Applications</strong>.</li>
     <li>The first time, <strong>right-click BellowFlow → Open</strong> and confirm, because the build is not notarized yet. Then follow the setup window as above.</li>
   </ol>
@@ -104,7 +104,7 @@ shasum -a 256 -c BellowFlow-1.0.0-rc.2-macOS-arm64.dmg.sha256</code><button clas
       var rel = list[0], el = document.getElementById('version');
       el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
       var m = /^v(.+)$/.exec(rel.tag_name);
-      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.2').join(m[1]);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.3').join(m[1]);
     }).catch(function () {});
 </script>
 </body>
