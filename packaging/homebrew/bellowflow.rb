@@ -7,7 +7,7 @@
 # release's .sha256 file (`brew bump-cask-pr` can do this too).
 cask "bellowflow" do
   version "1.0.0-rc.2"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000" # from BellowFlow-#{version}-macOS-arm64.dmg.sha256
+  sha256 "0fde939525fef2096d7de1706ff9509be4ff93fee10f8e353dd3da551100f729"
 
   url "https://github.com/xuancongwen/bellowflow/releases/download/v#{version}/BellowFlow-#{version}-macOS-arm64.dmg"
   name "BellowFlow"

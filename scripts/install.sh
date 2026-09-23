@@ -32,18 +32,19 @@ done
 api="https://api.github.com/repos/${REPO}/releases"
 if [[ -n "${BELLOWFLOW_VERSION:-}" ]]; then
   api="${api}/tags/${BELLOWFLOW_VERSION}"
-  release_json="$(curl -fsSL "$api")" || fail "No release tagged ${BELLOWFLOW_VERSION} at https://github.com/${REPO}/releases"
+  release_json="$(curl -fsSL "$api" 2>&1)" || fail "No release tagged ${BELLOWFLOW_VERSION} at https://github.com/${REPO}/releases (${release_json})"
 else
   # /releases/latest skips pre-releases; take the newest entry instead.
-  release_json="$(curl -fsSL "${api}?per_page=1")" || fail "Could not reach GitHub to find the latest release."
+  release_json="$(curl -fsSL "${api}?per_page=1" 2>&1)" || fail "Could not look up the latest release on GitHub (${release_json}). Try again in a few minutes, or download the DMG from https://github.com/${REPO}/releases"
 fi
-tag="$(printf '%s' "$release_json" | grep -o '"tag_name": *"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+# `grep` exits 1 on no match; keep set -e from killing the script before the messages below.
+tag="$(printf '%s' "$release_json" | grep -o '"tag_name": *"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
 [[ -n "$tag" ]] || fail "No releases found at https://github.com/${REPO}/releases"
-urls="$(printf '%s' "$release_json" | grep -o '"browser_download_url": *"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
-sha_url="$(printf '%s\n' "$urls" | grep '\.dmg\.sha256$' | head -1)"
+urls="$(printf '%s' "$release_json" | grep -o '"browser_download_url": *"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+sha_url="$(printf '%s\n' "$urls" | grep '\.dmg\.sha256$' | head -1 || true)"
 [[ -n "$sha_url" ]] || fail "Release ${tag} has no .sha256 asset; is the build still running? https://github.com/${REPO}/releases/tag/${tag}"
 dmg="$(basename "${sha_url%.sha256}")"
-part_urls="$(printf '%s\n' "$urls" | grep "^.*/${dmg}\.part-" | sort)"
+part_urls="$(printf '%s\n' "$urls" | grep "^.*/${dmg}\.part-" | sort || true)"
 whole_url="$(printf '%s\n' "$urls" | grep "/${dmg}$" | head -1 || true)"
 [[ -n "$part_urls" || -n "$whole_url" ]] || fail "Release ${tag} has no DMG assets."
 
