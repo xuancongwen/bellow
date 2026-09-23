@@ -91,8 +91,14 @@ rm -rf "${DEST}/BellowFlow.app"
 ditto "$app" "${DEST}/BellowFlow.app"
 hdiutil detach "$mount" -quiet
 trap - EXIT
-# Release candidates are ad-hoc signed, so Gatekeeper would otherwise require right-click -> Open.
-xattr -dr com.apple.quarantine "${DEST}/BellowFlow.app" 2>/dev/null || true
+# A notarized build passes Gatekeeper as is. An ad-hoc signed release candidate would need
+# right-click -> Open, so clear its quarantine flag instead.
+if spctl --assess --type execute "${DEST}/BellowFlow.app" >/dev/null 2>&1; then
+  say "Notarized by Apple; Gatekeeper accepts it"
+else
+  say "Development build (not notarized); clearing the quarantine flag"
+  xattr -dr com.apple.quarantine "${DEST}/BellowFlow.app" 2>/dev/null || true
+fi
 rm -f "$dmg" "${dmg}.sha256"
 
 say "Installed ${DEST}/BellowFlow.app (${tag})"

@@ -48,6 +48,11 @@ Dictate: press ⌃⌥X, speak, press it again. A small overlay shows
 listening, transcribing, and cleaning up. Do not switch windows while it is
 typing. Quit from the menu bar to release the models.
 
+To use a different shortcut, open **Setup and status…** from the menu bar,
+click **Change…** next to the shortcut, and press the new combination (it
+needs Control, Option, or Command; Escape keeps the old one). It takes
+effect immediately and is remembered; **Reset** returns to ⌃⌥X.
+
 No Homebrew, Python, Rust, Ollama installation, account, or API key is needed.
 The only network use is the one-time model download on first start; dictation
 itself never touches the network. Recording is toggle, not hold-to-talk; a
@@ -129,7 +134,7 @@ pins them):
 | Section | Setting | Why |
 | --- | --- | --- |
 | top level | `engine = "whisper"`, `state_file = "auto"` | Explicit engine; state file under the private runtime directory the app watches. |
-| `[hotkey]` | `enabled = false` | BellowFlow registers ⌃⌥X itself via Carbon, so no Input Monitoring is needed. |
+| `[hotkey]` | `enabled = false` | BellowFlow registers the shortcut itself via Carbon (⌃⌥X by default, changeable in the setup window), so no Input Monitoring is needed. |
 | `[osd]` | `enabled = false` | BellowFlow draws its own overlay. |
 | `[audio]` | `device = "default"`, `sample_rate = 16000`, `max_duration_secs = 120` | Safety cap; the recording is transcribed at the limit. |
 | `[whisper]` | `mode = "local"`, absolute model path, `language = "en"`, `translate = false`, `flash_attention = true` | Bundled model only, English forced, flash attention on Metal. |
@@ -190,16 +195,45 @@ the git CLI (SSH agents and `url.<base>.insteadOf` rewrites work), and clang's
 compiler-rt is linked into VoxType because whisper.cpp's Objective-C Metal
 backend needs it on current Xcode.
 
-For a distributable signed and notarized build:
+### Signing and notarization
+
+Without a certificate the build is ad-hoc signed: fine for development, but
+Gatekeeper requires right-click → Open and each rebuild can invalidate earlier
+permission grants. A public release should be Developer ID signed and
+notarized, which the build script and the release workflow both support once
+these one-time steps are done:
+
+1. Join the [Apple Developer Program](https://developer.apple.com/programs/)
+   (US$99 per year; a personal membership is enough).
+2. Create a **Developer ID Application** certificate: Xcode → Settings →
+   Accounts → Manage Certificates → **+**, or at
+   [developer.apple.com/account/resources/certificates](https://developer.apple.com/account/resources/certificates/list).
+   It lands in your login keychain as `Developer ID Application: Your Name (TEAMID)`.
+3. Create an app-specific password for notarization at
+   [account.apple.com](https://account.apple.com/account/manage) → Sign-In and
+   Security → App-Specific Passwords.
+
+Build on your Mac:
 
 ```sh
-SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' \
-NOTARY_PROFILE='your-notary-profile' ./scripts/build-macos.sh
+xcrun notarytool store-credentials bellowflow --apple-id you@example.com --team-id TEAMID --password xxxx-xxxx-xxxx-xxxx
+SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' NOTARY_PROFILE=bellowflow ./scripts/build-macos.sh
 ```
 
-Without those, the build is ad-hoc signed: fine for development, but
-rebuilding can invalidate earlier permission grants, and Gatekeeper requires
-right-click → Open. Do not ship an ad-hoc build as a frictionless installer.
+Build in CI: export the certificate from Keychain Access as a `.p12` with a
+password, then add five repository secrets (Settings → Secrets and variables
+→ Actions): `APPLE_CERTIFICATE_P12` (`base64 -i cert.p12 | pbcopy`),
+`APPLE_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, and
+`APPLE_APP_SPECIFIC_PASSWORD`. With all five set, the next tag produces a
+signed, notarized, stapled app and DMG and the release notes say so; with any
+missing, the build stays ad-hoc.
+
+The script signs every nested Mach-O with the hardened runtime and the
+entitlements in `Resources/Entitlements.plist` (only `audio-input`), submits
+the app and then the DMG to Apple, staples both, and checks the result with
+`spctl`. Switching from an ad-hoc to a Developer ID signature changes the app's
+identity, so macOS asks for Microphone and Accessibility once more on the
+first signed build.
 
 ## Releases
 

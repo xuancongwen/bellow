@@ -82,13 +82,28 @@ while IFS= read -r -d '' path; do
 done < <(find "$APP/Contents" -type f -print0)
 codesign --force --options runtime --sign "$IDENTITY" --entitlements Resources/Entitlements.plist "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
-if [[ -n "${NOTARY_PROFILE:-}" ]]; then
+# Notarize with either a stored keychain profile (NOTARY_PROFILE, for a developer Mac) or
+# Apple ID credentials in the environment (NOTARY_APPLE_ID, NOTARY_TEAM_ID, NOTARY_PASSWORD, for CI).
+notarize() {
+  if [[ -n "${NOTARY_PROFILE:-}" ]]; then xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait
+  else xcrun notarytool submit "$1" --apple-id "$NOTARY_APPLE_ID" --team-id "$NOTARY_TEAM_ID" --password "$NOTARY_PASSWORD" --wait; fi
+  xcrun stapler staple "$1"
+}
+NOTARIZE=0
+if [[ -n "${NOTARY_PROFILE:-}" || -n "${NOTARY_APPLE_ID:-}" ]]; then
+  [[ "$IDENTITY" != "-" ]] || { echo 'Notarization needs SIGNING_IDENTITY (a Developer ID Application certificate).' >&2; exit 1; }
+  NOTARIZE=1
   ditto -c -k --keepParent "$APP" "$ROOT/dist/notarize.zip"
-  xcrun notarytool submit "$ROOT/dist/notarize.zip" --keychain-profile "$NOTARY_PROFILE" --wait
+  notarize "$ROOT/dist/notarize.zip"
   xcrun stapler staple "$APP"
   rm "$ROOT/dist/notarize.zip"
+  spctl --assess --type execute --verbose=2 "$APP"
 fi
 rm -f "$ROOT"/dist/BellowFlow-*-macOS-arm64.dmg "$ROOT"/dist/BellowFlow-*-macOS-arm64.dmg.sha256
 hdiutil create -volname "BellowFlow $RELEASE" -srcfolder "$APP" -ov -format UDZO "$DMG"
+if [[ "$NOTARIZE" == 1 ]]; then
+  if [[ "$IDENTITY" != "-" ]]; then codesign --force --sign "$IDENTITY" "$DMG"; fi
+  notarize "$DMG"
+fi
 (cd "$ROOT/dist" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
 echo "Built: $DMG ($SHORT_VERSION build $BUILD_NUMBER)"

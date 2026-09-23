@@ -104,6 +104,17 @@ final class AppModel: ObservableObject {
     @Published var ready = false
     @Published var failed = false
     @Published var progress: Double?
+    @Published var shortcut = Shortcut.load()
+    /// Set by the delegate: re-registers the hot key and reports whether the combination was free.
+    var registerShortcut: ((Shortcut) -> Bool)?
+    func setShortcut(_ new: Shortcut) {
+        guard registerShortcut?(new) ?? true else {
+            status = "\(new.label) is taken by another app. The shortcut is still \(shortcut.label)."
+            _ = registerShortcut?(shortcut); return
+        }
+        shortcut = new; new.save()
+        if ready { status = "Ready · \(new.label) to dictate" }
+    }
     private var engine: Process?
     private var ollama: Process?
     private var timer: Timer?
@@ -202,7 +213,7 @@ final class AppModel: ObservableObject {
             guard engineReady else { throw problem("Whisper did not become ready within three minutes.") }
             startWatching()
             watchMemory()
-            ready = true; busy = false; status = "Ready · ⌃⌥X to dictate"
+            ready = true; busy = false; status = "Ready · \(shortcut.label) to dictate"
             UserDefaults.standard.set(true, forKey: "onboarded")
             // Health check only: no subprocess or frequent filesystem polling at idle.
             timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
@@ -308,7 +319,7 @@ final class AppModel: ObservableObject {
                 self.overlay.show("Memory pressure · dictation paused")
             } else {
                 self.memoryBlocked = false
-                self.status = "Ready · ⌃⌥X to dictate"
+                self.status = "Ready · \(self.shortcut.label) to dictate"
                 self.updateOverlay()
             }
         }
@@ -319,7 +330,7 @@ final class AppModel: ObservableObject {
         let state = readState()
         if memoryBlocked && state == "idle" { overlay.show("Memory pressure · dictation paused"); return }
         if state == "idle" { overlay.hide(); activeTimer?.invalidate(); activeTimer = nil }
-        else if state == "recording" { overlay.show("●  Listening · ⌃⌥X to finish") }
+        else if state == "recording" { overlay.show("●  Listening · \(shortcut.label) to finish") }
         else if state == "transcribing" {
             let cleaning = fm.fileExists(atPath: runtime.appendingPathComponent("cleanup-state").path)
             overlay.show(cleaning ? "✦  Cleaning up…" : "•••  Transcribing…")
@@ -354,7 +365,7 @@ struct SetupView: View {
             Divider()
             Label("Whisper large-v3-turbo Q5 · English", systemImage: "mic")
             Label("Qwen 2.5 7B · your original Modelfile", systemImage: "sparkles")
-            Label("Control + Option + X to start and finish", systemImage: "keyboard")
+            ShortcutRecorder(model: model)
             Divider()
             Label("Microphone " + (model.microphone ? "granted" : "not granted"), systemImage: model.microphone ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(model.microphone ? Color.green : Color.secondary)
@@ -378,8 +389,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
     var item: NSStatusItem!
     var window: NSWindow!
-    var hotkey: EventHotKeyRef?
+    let hotkey = HotkeyRegistrar()
     var readyObserver: AnyCancellable?
+    var toggleItem: NSMenuItem?
     func applicationDidFinishLaunching(_ notification: Notification) {
         let siblings = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "org.bellowflow.app")
         if siblings.count > 1 { NSApp.terminate(nil); return }
@@ -387,8 +399,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "BellowFlow")
         let menu = NSMenu()
-        for (title, selector) in [("Start / finish dictation  ⌃⌥X", #selector(toggle)), ("Cancel recording", #selector(cancel)), ("Setup and status…", #selector(showSetup)), ("Quit BellowFlow", #selector(quit))] {
+        for (title, selector) in [("Start / finish dictation  \(model.shortcut.label)", #selector(toggle)), ("Cancel recording", #selector(cancel)), ("Setup and status…", #selector(showSetup)), ("Quit BellowFlow", #selector(quit))] {
             let entry = NSMenuItem(title: title, action: selector, keyEquivalent: ""); entry.target = self; menu.addItem(entry)
+            if selector == #selector(toggle) { toggleItem = entry }
         }
         item.menu = menu
         window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
@@ -405,14 +418,13 @@ final class Delegate: NSObject, NSApplicationDelegate {
             guard let self = self, !self.model.ready else { return }
             self.window.makeKeyAndOrderFront(nil)
         }
-        var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, userData in
-            guard let userData = userData else { return OSStatus(eventNotHandledErr) }
-            Unmanaged<Delegate>.fromOpaque(userData).takeUnretainedValue().model.control("toggle")
-            return noErr
-        }, 1, &type, Unmanaged.passUnretained(self).toOpaque(), nil)
-        let result = RegisterEventHotKey(UInt32(kVK_ANSI_X), UInt32(controlKey | optionKey), EventHotKeyID(signature: 0x42464C57 /* "BFLW" */, id: 1), GetApplicationEventTarget(), 0, &hotkey)
-        if result != noErr { model.status = "The shortcut is in use by another app. Free Control–Option–X, then relaunch."; showSetup() }
+        hotkey.onPress = { [weak self] in self?.model.control("toggle") }
+        model.registerShortcut = { [weak self] shortcut in
+            guard let self = self, self.hotkey.register(shortcut) else { return false }
+            self.toggleItem?.title = "Start / finish dictation  \(shortcut.label)"
+            return true
+        }
+        if !hotkey.register(model.shortcut) { model.status = "\(model.shortcut.label) is taken by another app. Change the shortcut below."; showSetup() }
         else if UserDefaults.standard.bool(forKey: "onboarded") { model.start() }
         else { showSetup() }
     }
@@ -423,7 +435,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if !model.ready { model.watchPermissions() }
     }
     @objc func quit() { NSApp.terminate(nil) }
-    func applicationWillTerminate(_ notification: Notification) { model.stop(); if let hotkey = hotkey { UnregisterEventHotKey(hotkey) } }
+    func applicationWillTerminate(_ notification: Notification) { model.stop() }
 }
 if CommandLine.arguments.contains("--prepare-models") { exit(prepareModelsHeadless()) }
 let app = NSApplication.shared

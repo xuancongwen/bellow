@@ -25,14 +25,36 @@ jobs:
     timeout-minutes: 90
     permissions:
       contents: write
+    env:
+      # Optional. With all five set, the build is Developer ID signed and notarized; without
+      # them it is ad-hoc signed. See README "Signing and notarization".
+      APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      NOTARY_APPLE_ID: ${{ secrets.APPLE_ID }}
+      NOTARY_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      NOTARY_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: brew install cmake
+      - name: Import Developer ID certificate
+        if: env.APPLE_CERTIFICATE_P12 != ''
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          security create-keychain -p "" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "" "$KEYCHAIN"
+          echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          rm "$RUNNER_TEMP/certificate.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          IDENTITY="$(security find-identity -v -p codesigning "$KEYCHAIN" | grep 'Developer ID Application' | head -1 | sed 's/.*"\(.*\)".*/\1/')"
+          [[ -n "$IDENTITY" ]] || { echo 'No Developer ID Application identity in the certificate'; exit 1; }
+          echo "SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
       - name: Check the tag matches VERSION
         if: startsWith(github.ref, 'refs/tags/v')
         run: '[[ "${GITHUB_REF_NAME}" == "v$(tr -d "[:space:]" < VERSION)" ]] || { echo "Tag ${GITHUB_REF_NAME} does not match VERSION"; exit 1; }'
-      # Ad-hoc signed unless SIGNING_IDENTITY/NOTARY_PROFILE are configured on the runner.
       - run: ./scripts/build-macos.sh
       - uses: actions/upload-artifact@v4
         with:
@@ -47,14 +69,15 @@ jobs:
         run: |
           cd dist
           DMG=$(ls BellowFlow-*-macOS-arm64.dmg)
+          if [[ -n "${SIGNING_IDENTITY:-}" ]]; then SIGNED="Developer ID signed and notarized."; OPEN="double-click BellowFlow"; else SIGNED="Unsigned development build (ad-hoc signature)."; OPEN="right-click → Open the first time (Gatekeeper)"; fi
           cat > notes.md <<EOF
-          Unsigned development build (ad-hoc signature). Apple Silicon, macOS 13+, 16 GB RAM minimum.
+          $SIGNED Apple Silicon, macOS 13+, 16 GB RAM minimum.
 
           Easiest install (downloads, verifies, and installs the app):
 
               curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
 
-          Or download \`$DMG\`, open it, drag BellowFlow to Applications, and right-click → Open the first time (Gatekeeper). Verify with \`shasum -a 256 -c $DMG.sha256\`.
+          Or download \`$DMG\`, open it, drag BellowFlow to Applications, and $OPEN. Verify with \`shasum -a 256 -c $DMG.sha256\`.
 
           On first start the app downloads the speech and cleanup models (about 5.3 GB, once) into Application Support.
           EOF
