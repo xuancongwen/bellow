@@ -1,6 +1,8 @@
 name: macOS
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
     inputs:
@@ -16,16 +18,45 @@ jobs:
       - run: swift build -c release
       - run: python3 -m unittest discover -s tests -v
   bundle:
-    if: github.event_name == 'workflow_dispatch' && inputs.bundle
+    # Full DMG: manual runs when asked, and every v* tag. GitHub Release assets are capped at
+    # 2 GB each, so the 5.2 GB DMG is published as split parts plus a checksum; users
+    # reassemble with `cat`. Actions artifacts have no such cap and keep the whole DMG.
+    if: (github.event_name == 'workflow_dispatch' && inputs.bundle) || startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-15
     timeout-minutes: 240
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: brew install cmake
-      # Ad-hoc signed development build unless SIGNING_IDENTITY/NOTARY_PROFILE are provided.
+      - name: Check the tag matches VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: '[[ "${GITHUB_REF_NAME}" == "v$(tr -d "[:space:]" < VERSION)" ]] || { echo "Tag ${GITHUB_REF_NAME} does not match VERSION"; exit 1; }'
+      # Ad-hoc signed unless SIGNING_IDENTITY/NOTARY_PROFILE are configured on the runner.
       - run: ./scripts/build-macos.sh
       - uses: actions/upload-artifact@v4
         with:
           name: BellowFlow-macOS-arm64
-          path: dist/BellowFlow-macOS-arm64.dmg
+          path: |
+            dist/*.dmg
+            dist/*.sha256
+      - name: Publish pre-release with split DMG parts
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd dist
+          DMG=$(ls BellowFlow-*-macOS-arm64.dmg)
+          split -b 1900m -d "$DMG" "$DMG.part-"
+          cat > notes.md <<EOF
+          Unsigned development build (ad-hoc signature). Apple Silicon, macOS 13+, 16 GB RAM minimum.
+
+          GitHub limits release assets to 2 GB, so the DMG is split. Reassemble and verify:
+
+              cat $DMG.part-* > $DMG
+              shasum -a 256 -c $DMG.sha256
+
+          Then open the DMG, drag BellowFlow to Applications, and right-click → Open the first time (Gatekeeper).
+          EOF
+          gh release create "$GITHUB_REF_NAME" --prerelease --title "BellowFlow $GITHUB_REF_NAME" --notes-file notes.md "$DMG".part-* "$DMG.sha256"

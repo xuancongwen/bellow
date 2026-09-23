@@ -12,6 +12,13 @@ for tool in swift cargo cmake git curl python3 codesign; do
 done
 CACHE="$ROOT/.cache"
 APP="$ROOT/dist/BellowFlow.app"
+# VERSION holds the release label (e.g. 1.0.0-rc.1). Its numeric prefix becomes
+# CFBundleShortVersionString; the full label names the DMG and the git tag (v<label>).
+RELEASE="$(tr -d '[:space:]' < "$ROOT/VERSION")"
+[[ "$RELEASE" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "VERSION must look like 1.0.0 or 1.0.0-rc.1 (got '$RELEASE')" >&2; exit 1; }
+SHORT_VERSION="${RELEASE%%-*}"
+BUILD_NUMBER="${BUILD_NUMBER:-$(date -u +%Y%m%d%H%M)}"
+DMG="$ROOT/dist/BellowFlow-$RELEASE-macOS-arm64.dmg"
 RES="$APP/Contents/Resources"
 mkdir -p "$CACHE" "$ROOT/dist"
 fetch() {
@@ -54,6 +61,7 @@ while IFS= read -r -d '' entry; do
   if ! lipo -archs "$entry" 2>/dev/null | grep -qw arm64; then rm -f "$entry"; fi
 done < <(find "$RES/ollama" -type f ! -name ollama -print0)
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT_VERSION" -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Contents/Info.plist"
 # Use a private port and store while preparing the distributable models.
 export OLLAMA_HOST='127.0.0.1:11439'
 export OLLAMA_MODELS="$CACHE/models"
@@ -98,6 +106,7 @@ if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   xcrun stapler staple "$APP"
   rm "$ROOT/dist/notarize.zip"
 fi
-rm -f "$ROOT/dist/BellowFlow-macOS-arm64.dmg"
-hdiutil create -volname BellowFlow -srcfolder "$APP" -ov -format UDZO "$ROOT/dist/BellowFlow-macOS-arm64.dmg"
-echo "Built: $ROOT/dist/BellowFlow-macOS-arm64.dmg"
+rm -f "$ROOT"/dist/BellowFlow-*-macOS-arm64.dmg "$ROOT"/dist/BellowFlow-*-macOS-arm64.dmg.sha256
+hdiutil create -volname "BellowFlow $RELEASE" -srcfolder "$APP" -ov -format UDZO "$DMG"
+(cd "$ROOT/dist" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
+echo "Built: $DMG ($SHORT_VERSION build $BUILD_NUMBER)"
