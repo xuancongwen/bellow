@@ -99,5 +99,5 @@ say "Installed ${DEST}/BellowFlow.app (${tag})"
 echo
 echo "Opening BellowFlow. Grant Microphone and Accessibility in the setup window and click Start."
 echo "The first start downloads the speech and cleanup models (about 5.3 GB, once)."
-echo "When the status reads \"Ready\", press Control+Option+Space to dictate."
+echo "When the status reads \"Ready\", press Control+Option+X to dictate."
 open "${DEST}/BellowFlow.app"

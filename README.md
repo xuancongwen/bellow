@@ -1,6 +1,6 @@
 # BellowFlow
 
-A native macOS menu-bar dictation app. Press **Control + Option + Space**, speak,
+A native macOS menu-bar dictation app. Press **Control + Option + X**, speak,
 press it again, and the cleaned-up English text is typed into whatever app has
 focus. Everything runs on your Mac: it bundles [VoxType](https://github.com/peteonrails/voxtype)
 and a private [Ollama](https://github.com/ollama/ollama) server, and on first
@@ -29,7 +29,7 @@ start.
    warning.
 4. In the setup window, allow **Microphone** and **Accessibility** and click
    **Start**. The first start downloads the models (resumes if interrupted);
-   the status reads **Ready · ⌃⌥Space to dictate** when done. Later launches
+   the status reads **Ready · ⌃⌥X to dictate** when done. Later launches
    start on their own.
 
 Prefer the terminal? This does steps 1 to 3 for you, including checksum
@@ -44,7 +44,7 @@ The script is [`scripts/install.sh`](scripts/install.sh);
 fetch the `.sha256` file next to the DMG and run `shasum -a 256 -c` on it.
 A Homebrew cask is drafted (see [Homebrew](#homebrew)).
 
-Dictate: press ⌃⌥Space, speak, press it again. A small overlay shows
+Dictate: press ⌃⌥X, speak, press it again. A small overlay shows
 listening, transcribing, and cleaning up. Do not switch windows while it is
 typing. Quit from the menu bar to release the models.
 
@@ -129,7 +129,7 @@ pins them):
 | Section | Setting | Why |
 | --- | --- | --- |
 | top level | `engine = "whisper"`, `state_file = "auto"` | Explicit engine; state file under the private runtime directory the app watches. |
-| `[hotkey]` | `enabled = false` | BellowFlow registers ⌃⌥Space itself via Carbon, so no Input Monitoring is needed. |
+| `[hotkey]` | `enabled = false` | BellowFlow registers ⌃⌥X itself via Carbon, so no Input Monitoring is needed. |
 | `[osd]` | `enabled = false` | BellowFlow draws its own overlay. |
 | `[audio]` | `device = "default"`, `sample_rate = 16000`, `max_duration_secs = 120` | Safety cap; the recording is transcribed at the limit. |
 | `[whisper]` | `mode = "local"`, absolute model path, `language = "en"`, `translate = false`, `flash_attention = true` | Bundled model only, English forced, flash attention on Metal. |

@@ -39,6 +39,6 @@ cask "bellowflow" do
     BellowFlow needs an Apple Silicon Mac with at least 16 GB of memory.
     On first launch grant Microphone and Accessibility and click Start; the app
     then downloads its models (about 5.3 GB, once). When it reads Ready, press
-    Control+Option+Space to dictate.
+    Control+Option+X to dictate.
   EOS
 end

@@ -202,7 +202,7 @@ final class AppModel: ObservableObject {
             guard engineReady else { throw problem("Whisper did not become ready within three minutes.") }
             startWatching()
             watchMemory()
-            ready = true; busy = false; status = "Ready · ⌃⌥Space to dictate"
+            ready = true; busy = false; status = "Ready · ⌃⌥X to dictate"
             UserDefaults.standard.set(true, forKey: "onboarded")
             // Health check only: no subprocess or frequent filesystem polling at idle.
             timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
@@ -308,7 +308,7 @@ final class AppModel: ObservableObject {
                 self.overlay.show("Memory pressure · dictation paused")
             } else {
                 self.memoryBlocked = false
-                self.status = "Ready · ⌃⌥Space to dictate"
+                self.status = "Ready · ⌃⌥X to dictate"
                 self.updateOverlay()
             }
         }
@@ -319,7 +319,7 @@ final class AppModel: ObservableObject {
         let state = readState()
         if memoryBlocked && state == "idle" { overlay.show("Memory pressure · dictation paused"); return }
         if state == "idle" { overlay.hide(); activeTimer?.invalidate(); activeTimer = nil }
-        else if state == "recording" { overlay.show("●  Listening · ⌃⌥Space to finish") }
+        else if state == "recording" { overlay.show("●  Listening · ⌃⌥X to finish") }
         else if state == "transcribing" {
             let cleaning = fm.fileExists(atPath: runtime.appendingPathComponent("cleanup-state").path)
             overlay.show(cleaning ? "✦  Cleaning up…" : "•••  Transcribing…")
@@ -354,7 +354,7 @@ struct SetupView: View {
             Divider()
             Label("Whisper large-v3-turbo Q5 · English", systemImage: "mic")
             Label("Qwen 2.5 7B · your original Modelfile", systemImage: "sparkles")
-            Label("Control + Option + Space to start and finish", systemImage: "keyboard")
+            Label("Control + Option + X to start and finish", systemImage: "keyboard")
             Divider()
             Label("Microphone " + (model.microphone ? "granted" : "not granted"), systemImage: model.microphone ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(model.microphone ? Color.green : Color.secondary)
@@ -387,7 +387,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "BellowFlow")
         let menu = NSMenu()
-        for (title, selector) in [("Start / finish dictation  ⌃⌥Space", #selector(toggle)), ("Cancel recording", #selector(cancel)), ("Setup and status…", #selector(showSetup)), ("Quit BellowFlow", #selector(quit))] {
+        for (title, selector) in [("Start / finish dictation  ⌃⌥X", #selector(toggle)), ("Cancel recording", #selector(cancel)), ("Setup and status…", #selector(showSetup)), ("Quit BellowFlow", #selector(quit))] {
             let entry = NSMenuItem(title: title, action: selector, keyEquivalent: ""); entry.target = self; menu.addItem(entry)
         }
         item.menu = menu
@@ -411,8 +411,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
             Unmanaged<Delegate>.fromOpaque(userData).takeUnretainedValue().model.control("toggle")
             return noErr
         }, 1, &type, Unmanaged.passUnretained(self).toOpaque(), nil)
-        let result = RegisterEventHotKey(UInt32(kVK_Space), UInt32(controlKey | optionKey), EventHotKeyID(signature: 0x42464C57 /* "BFLW" */, id: 1), GetApplicationEventTarget(), 0, &hotkey)
-        if result != noErr { model.status = "The shortcut is in use by another app. Free Control–Option–Space, then relaunch."; showSetup() }
+        let result = RegisterEventHotKey(UInt32(kVK_ANSI_X), UInt32(controlKey | optionKey), EventHotKeyID(signature: 0x42464C57 /* "BFLW" */, id: 1), GetApplicationEventTarget(), 0, &hotkey)
+        if result != noErr { model.status = "The shortcut is in use by another app. Free Control–Option–X, then relaunch."; showSetup() }
         else if UserDefaults.standard.bool(forKey: "onboarded") { model.start() }
         else { showSetup() }
     }
