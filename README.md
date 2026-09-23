@@ -259,6 +259,8 @@ Verified on an Apple M1 Max, 64 GB, macOS 26.6, Swift 6.4:
 - Memory and latency profile of both engines (`docs/memory-profile.md`).
 - Modelfile and VoxType license byte-identical to upstream; every generated
   config key and Ollama variable checked against the pinned sources.
+- License audit: every crate in the VoxType build, whisper.cpp, Ollama, both
+  models, and the Modelfile checked (`THIRD-PARTY-NOTICES.md`).
 
 Still open before a public 1.0:
 
@@ -270,12 +272,24 @@ Still open before a public 1.0:
    repeated launch/quit; forced engine failures and cleanup timeouts.
 4. Prompt-quality benchmark of the Modelfile examples, including questions,
    commands, profanity, self-corrections, and injection-like dictated text.
-5. Third-party license review, including a license for the Modelfile
-   repository, which has none today.
+5. Add a LICENSE file to the `voxtype-llm-wrapper` repository so the
+   Modelfile is MIT at its source too (it is already MIT here).
 
 ## License and provenance
 
-Application source: MIT. VoxType, Ollama, and Whisper: MIT. Qwen 2.5 7B:
-Apache 2.0. The app bundles the upstream license texts. The Modelfile is copied
-by explicit request from its author; settle its redistribution license before
-public distribution. Full transitive dependency notices remain a release item.
+Everything is open source under permissive licenses; nothing copyleft or
+non-commercial is involved.
+
+| Component | License |
+| --- | --- |
+| BellowFlow source, including the cleanup Modelfile (by BellowFlow's author) | MIT |
+| VoxType, whisper.cpp/ggml, Ollama, Whisper large-v3-turbo weights | MIT |
+| Rust crates compiled into VoxType (listed in `docs/voxtype-crates.txt`) | MIT, Apache-2.0, BSD, ISC, Zlib, Unicode-3.0, Unlicense, CC0, CDLA-Permissive, BSL-1.0; one MPL-2.0 crate used unmodified |
+| Qwen2.5-7B-Instruct | Apache-2.0 |
+
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) has the full table with
+copyright holders and sources. The app bundles every license text in
+`Contents/Resources/licenses/`, and the build fails if one is missing or a
+crate's license is not permissive. The Modelfile is byte-identical to
+`voxtype-llm-wrapper`, which has no license file of its own; it is Sam Wen's
+work and is licensed here under this repository's MIT license.

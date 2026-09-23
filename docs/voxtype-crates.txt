@@ -1,0 +1,304 @@
+adler2 v2.0.1|0BSD OR MIT OR Apache-2.0|https://github.com/oyvindln/adler2
+ahash v0.8.12|MIT OR Apache-2.0|https://github.com/tkaitchuck/ahash
+aho-corasick v1.1.4|Unlicense OR MIT|https://github.com/BurntSushi/aho-corasick
+allocator-api2 v0.2.21|MIT OR Apache-2.0|https://github.com/zakarumych/allocator-api2
+anstream v0.6.21|MIT OR Apache-2.0|https://github.com/rust-cli/anstyle.git
+anstyle v1.0.13|MIT OR Apache-2.0|https://github.com/rust-cli/anstyle.git
+anstyle-parse v0.2.7|MIT OR Apache-2.0|https://github.com/rust-cli/anstyle.git
+anstyle-query v1.1.5|MIT OR Apache-2.0|https://github.com/rust-cli/anstyle.git
+anyhow v1.0.100|MIT OR Apache-2.0|https://github.com/dtolnay/anyhow
+async-trait v0.1.89|MIT OR Apache-2.0|https://github.com/dtolnay/async-trait
+atomic-waker v1.1.2|Apache-2.0 OR MIT|https://github.com/smol-rs/atomic-waker
+autocfg v1.5.0|Apache-2.0 OR MIT|https://github.com/cuviper/autocfg
+base64 v0.22.1|MIT OR Apache-2.0|https://github.com/marshallpierce/rust-base64
+bindgen v0.72.1|BSD-3-Clause|https://github.com/rust-lang/rust-bindgen
+bitflags v1.3.2|MIT/Apache-2.0|https://github.com/bitflags/bitflags
+bitflags v2.10.0|MIT OR Apache-2.0|https://github.com/bitflags/bitflags
+block v0.1.6|MIT|http://github.com/SSheldon/rust-block
+block-buffer v0.10.4|MIT OR Apache-2.0|https://github.com/RustCrypto/utils
+block2 v0.6.2|MIT|https://github.com/madsmtm/objc2
+byteorder v1.5.0|Unlicense OR MIT|https://github.com/BurntSushi/byteorder
+bytes v1.11.0|MIT|https://github.com/tokio-rs/bytes
+cachedir v0.3.1|MIT|https://github.com/jstasiak/cachedir
+cassowary v0.3.0|MIT / Apache-2.0|https://github.com/dylanede/cassowary-rs
+castaway v0.2.4|MIT|https://github.com/sagebind/castaway
+cc v1.2.47|MIT OR Apache-2.0|https://github.com/rust-lang/cc-rs
+cexpr v0.6.0|Apache-2.0/MIT|https://github.com/jethrogb/rust-cexpr
+cfg-if v1.0.4|MIT OR Apache-2.0|https://github.com/rust-lang/cfg-if
+chrono v0.4.43|MIT OR Apache-2.0|https://github.com/chronotope/chrono
+clang-sys v1.8.1|Apache-2.0|https://github.com/KyleMayes/clang-sys
+clap v4.5.53|MIT OR Apache-2.0|https://github.com/clap-rs/clap
+clap_builder v4.5.53|MIT OR Apache-2.0|https://github.com/clap-rs/clap
+clap_derive v4.5.49|MIT OR Apache-2.0|https://github.com/clap-rs/clap
+clap_lex v0.7.6|MIT OR Apache-2.0|https://github.com/clap-rs/clap
+clap_mangen v0.2.31|MIT OR Apache-2.0|https://github.com/clap-rs/clap
+cmake v0.1.54|MIT OR Apache-2.0|https://github.com/rust-lang/cmake-rs
+cocoa v0.22.0|MIT / Apache-2.0|https://github.com/servo/core-foundation-rs
+colorchoice v1.0.4|MIT OR Apache-2.0|https://github.com/rust-cli/anstyle.git
+compact_str v0.8.1|MIT|https://github.com/ParkMyCar/compact_str
+core-foundation v0.10.1|MIT OR Apache-2.0|https://github.com/servo/core-foundation-rs
+core-foundation v0.7.0|MIT / Apache-2.0|https://github.com/servo/core-foundation-rs
+core-foundation v0.9.4|MIT OR Apache-2.0|https://github.com/servo/core-foundation-rs
+core-foundation-sys v0.7.0|MIT / Apache-2.0|https://github.com/servo/core-foundation-rs
+core-foundation-sys v0.8.7|MIT OR Apache-2.0|https://github.com/servo/core-foundation-rs
+core-graphics v0.19.2|MIT / Apache-2.0|https://github.com/servo/core-foundation-rs
+core-graphics v0.21.0|MIT / Apache-2.0|https://github.com/servo/core-foundation-rs
+core-graphics v0.24.0|MIT OR Apache-2.0|https://github.com/servo/core-foundation-rs
+core-graphics-types v0.2.0|MIT OR Apache-2.0|https://github.com/servo/core-foundation-rs
+coreaudio-rs v0.11.3|MIT/Apache-2.0|https://github.com/RustAudio/coreaudio-rs.git
+coreaudio-sys v0.2.17|MIT|https://github.com/RustAudio/coreaudio-sys.git
+cpal v0.15.3|Apache-2.0|https://github.com/rustaudio/cpal
+cpufeatures v0.2.17|MIT OR Apache-2.0|https://github.com/RustCrypto/utils
+crc32fast v1.5.0|MIT OR Apache-2.0|https://github.com/srijs/rust-crc32fast
+crossbeam-channel v0.5.15|MIT OR Apache-2.0|https://github.com/crossbeam-rs/crossbeam
+crossbeam-utils v0.8.21|MIT OR Apache-2.0|https://github.com/crossbeam-rs/crossbeam
+crossterm v0.28.1|MIT|https://github.com/crossterm-rs/crossterm
+crypto-common v0.1.7|MIT OR Apache-2.0|https://github.com/RustCrypto/traits
+darling v0.23.0|MIT|https://github.com/TedDriggs/darling
+darling_core v0.23.0|MIT|https://github.com/TedDriggs/darling
+darling_macro v0.23.0|MIT|https://github.com/TedDriggs/darling
+dasp_sample v0.11.0|MIT OR Apache-2.0|https://github.com/rustaudio/sample.git
+data-encoding v2.11.0|MIT|https://github.com/ia0/data-encoding
+deranged v0.5.8|MIT OR Apache-2.0|https://github.com/jhpratt/deranged
+digest v0.10.7|MIT OR Apache-2.0|https://github.com/RustCrypto/traits
+directories v5.0.1|MIT OR Apache-2.0|https://github.com/soc/directories-rs
+dirs v5.0.1|MIT OR Apache-2.0|https://github.com/soc/dirs-rs
+dirs-sys v0.4.1|MIT OR Apache-2.0|https://github.com/dirs-dev/dirs-sys-rs
+dispatch v0.2.0|MIT|http://github.com/SSheldon/rust-dispatch
+displaydoc v0.2.5|MIT OR Apache-2.0|https://github.com/yaahc/displaydoc
+dpi v0.1.2|Apache-2.0 AND MIT|https://github.com/rust-windowing/winit
+either v1.15.0|MIT OR Apache-2.0|https://github.com/rayon-rs/either
+env_home v0.1.0|MIT OR Apache-2.0|https://github.com/notpeter/env-home
+equivalent v1.0.2|Apache-2.0 OR MIT|https://github.com/indexmap-rs/equivalent
+errno v0.3.14|MIT OR Apache-2.0|https://github.com/lambda-fairy/rust-errno
+fallible-iterator v0.3.0|MIT/Apache-2.0|https://github.com/sfackler/rust-fallible-iterator
+fallible-streaming-iterator v0.1.9|MIT/Apache-2.0|https://github.com/sfackler/fallible-streaming-iterator
+fastrand v2.3.0|Apache-2.0 OR MIT|https://github.com/smol-rs/fastrand
+fdeflate v0.3.7|MIT OR Apache-2.0|https://github.com/image-rs/fdeflate
+filetime v0.2.26|MIT/Apache-2.0|https://github.com/alexcrichton/filetime
+find-msvc-tools v0.1.5|MIT OR Apache-2.0|https://github.com/rust-lang/cc-rs
+flate2 v1.1.5|MIT OR Apache-2.0|https://github.com/rust-lang/flate2-rs
+foldhash v0.1.5|Zlib|https://github.com/orlp/foldhash
+foreign-types v0.3.2|MIT/Apache-2.0|https://github.com/sfackler/foreign-types
+foreign-types v0.5.0|MIT/Apache-2.0|https://github.com/sfackler/foreign-types
+foreign-types-macros v0.2.3|MIT/Apache-2.0|https://github.com/sfackler/foreign-types
+foreign-types-shared v0.1.1|MIT/Apache-2.0|https://github.com/sfackler/foreign-types
+foreign-types-shared v0.3.1|MIT/Apache-2.0|https://github.com/sfackler/foreign-types
+form_urlencoded v1.2.2|MIT OR Apache-2.0|https://github.com/servo/rust-url
+fs_extra v1.3.0|MIT|https://github.com/webdesus/fs_extra
+fsevent-sys v4.1.0|MIT|https://github.com/octplane/fsevent-rust/tree/master/fsevent-sys
+futures-channel v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/futures-rs
+futures-core v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/futures-rs
+futures-macro v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/futures-rs
+futures-sink v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/futures-rs
+futures-task v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/futures-rs
+futures-util v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/futures-rs
+generic-array v0.14.7|MIT|https://github.com/fizyk20/generic-array.git
+getrandom v0.2.16|MIT OR Apache-2.0|https://github.com/rust-random/getrandom
+getrandom v0.3.4|MIT OR Apache-2.0|https://github.com/rust-random/getrandom
+getrandom v0.4.1|MIT OR Apache-2.0|https://github.com/rust-random/getrandom
+glob v0.3.3|MIT OR Apache-2.0|https://github.com/rust-lang/glob
+hashbrown v0.14.5|MIT OR Apache-2.0|https://github.com/rust-lang/hashbrown
+hashbrown v0.15.5|MIT OR Apache-2.0|https://github.com/rust-lang/hashbrown
+hashbrown v0.16.1|MIT OR Apache-2.0|https://github.com/rust-lang/hashbrown
+hashlink v0.9.1|MIT OR Apache-2.0|https://github.com/kyren/hashlink
+heck v0.5.0|MIT OR Apache-2.0|https://github.com/withoutboats/heck
+hound v3.5.1|Apache-2.0|https://github.com/ruuda/hound
+http v1.4.0|MIT OR Apache-2.0|https://github.com/hyperium/http
+http-body v1.0.1|MIT|https://github.com/hyperium/http-body
+http-body-util v0.1.3|MIT|https://github.com/hyperium/http-body
+httparse v1.10.1|MIT OR Apache-2.0|https://github.com/seanmonstar/httparse
+hyper v1.9.0|MIT|https://github.com/hyperium/hyper
+hyper-rustls v0.27.9|Apache-2.0 OR ISC OR MIT|https://github.com/rustls/hyper-rustls
+hyper-util v0.1.20|MIT|https://github.com/hyperium/hyper-util
+iana-time-zone v0.1.65|MIT OR Apache-2.0|https://github.com/strawlab/iana-time-zone
+icu_collections v2.1.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+icu_locale_core v2.1.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+icu_normalizer v2.1.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+icu_normalizer_data v2.1.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+icu_properties v2.1.2|Unicode-3.0|https://github.com/unicode-org/icu4x
+icu_properties_data v2.1.2|Unicode-3.0|https://github.com/unicode-org/icu4x
+icu_provider v2.1.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+ident_case v1.0.1|MIT/Apache-2.0|https://github.com/TedDriggs/ident_case
+idna v1.1.0|MIT OR Apache-2.0|https://github.com/servo/rust-url/
+idna_adapter v1.2.1|Apache-2.0 OR MIT|https://github.com/hsivonen/idna_adapter
+indexmap v2.12.1|Apache-2.0 OR MIT|https://github.com/indexmap-rs/indexmap
+indoc v2.0.7|MIT OR Apache-2.0|https://github.com/dtolnay/indoc
+instability v0.3.12|MIT|https://github.com/ratatui/instability
+ipnet v2.12.0|MIT OR Apache-2.0|https://github.com/krisprice/ipnet
+is_terminal_polyfill v1.70.2|MIT OR Apache-2.0|https://github.com/polyfill-rs/is_terminal_polyfill
+itertools v0.13.0|MIT OR Apache-2.0|https://github.com/rust-itertools/itertools
+itoa v1.0.17|MIT OR Apache-2.0|https://github.com/dtolnay/itoa
+keyboard-types v0.7.0|MIT OR Apache-2.0|https://github.com/pyfisch/keyboard-types
+lazy_static v1.5.0|MIT OR Apache-2.0|https://github.com/rust-lang-nursery/lazy-static.rs
+libc v0.2.177|MIT OR Apache-2.0|https://github.com/rust-lang/libc
+libloading v0.8.9|ISC|https://github.com/nagisa/rust_libloading/
+libsqlite3-sys v0.30.1|MIT|https://github.com/rusqlite/rusqlite
+litemap v0.8.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+lock_api v0.4.14|MIT OR Apache-2.0|https://github.com/Amanieu/parking_lot
+log v0.4.29|MIT OR Apache-2.0|https://github.com/rust-lang/log
+lru v0.12.5|MIT|https://github.com/jeromefroe/lru-rs.git
+mac-notification-sys v0.6.12|MIT/Apache-2.0|https://github.com/h4llow3En/mac-notification-sys
+mach2 v0.4.3|BSD-2-Clause OR MIT OR Apache-2.0|https://github.com/JohnTitor/mach2
+malloc_buf v0.0.6|MIT|https://github.com/SSheldon/malloc_buf
+matchers v0.2.0|MIT|https://github.com/hawkw/matchers
+memchr v2.8.0|Unlicense OR MIT|https://github.com/BurntSushi/memchr
+mime v0.3.17|MIT OR Apache-2.0|https://github.com/hyperium/mime
+mime_guess v2.0.5|MIT|https://github.com/abonander/mime_guess
+minimal-lexical v0.2.1|MIT/Apache-2.0|https://github.com/Alexhuszagh/minimal-lexical
+miniz_oxide v0.8.9|MIT OR Zlib OR Apache-2.0|https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide
+mio v1.1.0|MIT|https://github.com/tokio-rs/mio
+muda v0.17.2|Apache-2.0 OR MIT|https://github.com/tauri-apps/muda
+nom v7.1.3|MIT|https://github.com/Geal/nom
+notify v6.1.1|CC0-1.0|https://github.com/notify-rs/notify.git
+nu-ansi-term v0.50.3|MIT|https://github.com/nushell/nu-ansi-term
+num_cpus v1.17.0|MIT OR Apache-2.0|https://github.com/seanmonstar/num_cpus
+num-complex v0.4.6|MIT OR Apache-2.0|https://github.com/rust-num/num-complex
+num-conv v0.2.1|MIT OR Apache-2.0|https://github.com/jhpratt/num-conv
+num-integer v0.1.46|MIT OR Apache-2.0|https://github.com/rust-num/num-integer
+num-traits v0.2.19|MIT OR Apache-2.0|https://github.com/rust-num/num-traits
+objc v0.2.7|MIT|http://github.com/SSheldon/rust-objc
+objc2 v0.6.4|MIT|https://github.com/madsmtm/objc2
+objc2-app-kit v0.3.2|Zlib OR Apache-2.0 OR MIT|https://github.com/madsmtm/objc2
+objc2-core-foundation v0.3.2|Zlib OR Apache-2.0 OR MIT|https://github.com/madsmtm/objc2
+objc2-core-graphics v0.3.2|Zlib OR Apache-2.0 OR MIT|https://github.com/madsmtm/objc2
+objc2-encode v4.1.0|MIT|https://github.com/madsmtm/objc2
+objc2-foundation v0.3.2|MIT|https://github.com/madsmtm/objc2
+once_cell v1.21.3|MIT OR Apache-2.0|https://github.com/matklad/once_cell
+option-ext v0.2.0|MPL-2.0|https://github.com/soc/option-ext.git
+parking_lot v0.12.5|MIT OR Apache-2.0|https://github.com/Amanieu/parking_lot
+parking_lot_core v0.9.12|MIT OR Apache-2.0|https://github.com/Amanieu/parking_lot
+paste v1.0.15|MIT OR Apache-2.0|https://github.com/dtolnay/paste
+percent-encoding v2.3.2|MIT OR Apache-2.0|https://github.com/servo/rust-url/
+pidlock v0.1.6|MIT|https://github.com/rockstar/pidlock
+pin-project-lite v0.2.16|Apache-2.0 OR MIT|https://github.com/taiki-e/pin-project-lite
+pkg-config v0.3.32|MIT OR Apache-2.0|https://github.com/rust-lang/pkg-config-rs
+png v0.17.16|MIT OR Apache-2.0|https://github.com/image-rs/image-png
+potential_utf v0.1.4|Unicode-3.0|https://github.com/unicode-org/icu4x
+powerfmt v0.2.0|MIT OR Apache-2.0|https://github.com/jhpratt/powerfmt
+ppv-lite86 v0.2.21|MIT OR Apache-2.0|https://github.com/cryptocorrosion/cryptocorrosion
+prettyplease v0.2.37|MIT OR Apache-2.0|https://github.com/dtolnay/prettyplease
+primal-check v0.3.4|MIT OR Apache-2.0|https://github.com/huonw/primal
+proc-macro2 v1.0.103|MIT OR Apache-2.0|https://github.com/dtolnay/proc-macro2
+quote v1.0.42|MIT OR Apache-2.0|https://github.com/dtolnay/quote
+rand v0.8.5|MIT OR Apache-2.0|https://github.com/rust-random/rand
+rand_chacha v0.3.1|MIT OR Apache-2.0|https://github.com/rust-random/rand
+rand_core v0.6.4|MIT OR Apache-2.0|https://github.com/rust-random/rand
+ratatui v0.29.0|MIT|https://github.com/ratatui/ratatui
+raw-window-handle v0.6.2|MIT OR Apache-2.0 OR Zlib|https://github.com/rust-windowing/raw-window-handle
+rdev v0.5.3|MIT|https://github.com/Narsil/rdev
+realfft v3.5.0|MIT|https://github.com/HEnquist/realfft
+regex v1.13.1|MIT OR Apache-2.0|https://github.com/rust-lang/regex
+regex-automata v0.4.16|MIT OR Apache-2.0|https://github.com/rust-lang/regex
+regex-syntax v0.8.11|MIT OR Apache-2.0|https://github.com/rust-lang/regex
+reqwest v0.12.28|MIT OR Apache-2.0|https://github.com/seanmonstar/reqwest
+ring v0.17.14|Apache-2.0 AND ISC|https://github.com/briansmith/ring
+rodio v0.19.0|MIT OR Apache-2.0|https://github.com/RustAudio/rodio
+roff v0.2.2|MIT OR Apache-2.0|https://github.com/rust-cli/roff-rs
+rubato v0.16.2|MIT|https://github.com/HEnquist/rubato
+rusqlite v0.32.1|MIT|https://github.com/rusqlite/rusqlite
+rustc-hash v2.1.1|Apache-2.0 OR MIT|https://github.com/rust-lang/rustc-hash
+rustfft v6.4.1|MIT OR Apache-2.0|https://github.com/ejmahler/RustFFT
+rustix v0.38.44|Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT|https://github.com/bytecodealliance/rustix
+rustix v1.1.2|Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT|https://github.com/bytecodealliance/rustix
+rustls v0.23.36|Apache-2.0 OR ISC OR MIT|https://github.com/rustls/rustls
+rustls-pki-types v1.13.2|MIT OR Apache-2.0|https://github.com/rustls/pki-types
+rustls-webpki v0.103.8|ISC|https://github.com/rustls/webpki
+rustversion v1.0.22|MIT OR Apache-2.0|https://github.com/dtolnay/rustversion
+ryu v1.0.22|Apache-2.0 OR BSL-1.0|https://github.com/dtolnay/ryu
+same-file v1.0.6|Unlicense/MIT|https://github.com/BurntSushi/same-file
+scopeguard v1.2.0|MIT OR Apache-2.0|https://github.com/bluss/scopeguard
+semver v1.0.27|MIT OR Apache-2.0|https://github.com/dtolnay/semver
+serde v1.0.228|MIT OR Apache-2.0|https://github.com/serde-rs/serde
+serde_core v1.0.228|MIT OR Apache-2.0|https://github.com/serde-rs/serde
+serde_derive v1.0.228|MIT OR Apache-2.0|https://github.com/serde-rs/serde
+serde_json v1.0.149|MIT OR Apache-2.0|https://github.com/serde-rs/json
+serde_spanned v0.6.9|MIT OR Apache-2.0|https://github.com/toml-rs/toml
+serde_urlencoded v0.7.1|MIT/Apache-2.0|https://github.com/nox/serde_urlencoded
+sha1 v0.10.6|MIT OR Apache-2.0|https://github.com/RustCrypto/hashes
+sha2 v0.10.9|MIT OR Apache-2.0|https://github.com/RustCrypto/hashes
+sharded-slab v0.1.7|MIT|https://github.com/hawkw/sharded-slab
+shlex v1.3.0|MIT OR Apache-2.0|https://github.com/comex/rust-shlex
+signal-hook v0.3.18|Apache-2.0/MIT|https://github.com/vorner/signal-hook
+signal-hook-mio v0.2.5|MIT OR Apache-2.0|https://github.com/vorner/signal-hook
+signal-hook-registry v1.4.7|MIT OR Apache-2.0|https://github.com/vorner/signal-hook
+simd-adler32 v0.3.8|MIT|https://github.com/mcountryman/simd-adler32
+slab v0.4.12|MIT|https://github.com/tokio-rs/slab
+smallvec v1.15.1|MIT OR Apache-2.0|https://github.com/servo/rust-smallvec
+socket2 v0.6.1|MIT OR Apache-2.0|https://github.com/rust-lang/socket2
+stable_deref_trait v1.2.1|MIT OR Apache-2.0|https://github.com/storyyeller/stable_deref_trait
+static_assertions v1.1.0|MIT OR Apache-2.0|https://github.com/nvzqz/static-assertions-rs
+strength_reduce v0.2.4|MIT OR Apache-2.0|http://github.com/ejmahler/strength_reduce
+strsim v0.11.1|MIT|https://github.com/rapidfuzz/strsim-rs
+strum v0.26.3|MIT|https://github.com/Peternator7/strum
+strum_macros v0.26.4|MIT|https://github.com/Peternator7/strum
+subtle v2.6.1|BSD-3-Clause|https://github.com/dalek-cryptography/subtle
+syn v2.0.117|MIT OR Apache-2.0|https://github.com/dtolnay/syn
+sync_wrapper v1.0.2|Apache-2.0|https://github.com/Actyx/sync_wrapper
+synstructure v0.13.2|MIT|https://github.com/mystor/synstructure
+tao v0.32.8|Apache-2.0|https://github.com/tauri-apps/tao
+tempfile v3.23.0|MIT OR Apache-2.0|https://github.com/Stebalien/tempfile
+thiserror v1.0.69|MIT OR Apache-2.0|https://github.com/dtolnay/thiserror
+thiserror v2.0.17|MIT OR Apache-2.0|https://github.com/dtolnay/thiserror
+thiserror-impl v1.0.69|MIT OR Apache-2.0|https://github.com/dtolnay/thiserror
+thiserror-impl v2.0.17|MIT OR Apache-2.0|https://github.com/dtolnay/thiserror
+thread_local v1.1.9|MIT OR Apache-2.0|https://github.com/Amanieu/thread_local-rs
+time v0.3.47|MIT OR Apache-2.0|https://github.com/time-rs/time
+time-core v0.1.8|MIT OR Apache-2.0|https://github.com/time-rs/time
+tinystr v0.8.2|Unicode-3.0|https://github.com/unicode-org/icu4x
+tokio v1.48.0|MIT|https://github.com/tokio-rs/tokio
+tokio-macros v2.6.0|MIT|https://github.com/tokio-rs/tokio
+tokio-rustls v0.26.4|MIT OR Apache-2.0|https://github.com/rustls/tokio-rustls
+tokio-tungstenite v0.24.0|MIT|https://github.com/snapview/tokio-tungstenite
+toml v0.8.23|MIT OR Apache-2.0|https://github.com/toml-rs/toml
+toml_datetime v0.6.11|MIT OR Apache-2.0|https://github.com/toml-rs/toml
+toml_edit v0.22.27|MIT OR Apache-2.0|https://github.com/toml-rs/toml
+toml_write v0.1.2|MIT OR Apache-2.0|https://github.com/toml-rs/toml
+tower v0.5.3|MIT|https://github.com/tower-rs/tower
+tower-http v0.6.10|MIT|https://github.com/tower-rs/tower-http
+tower-layer v0.3.3|MIT|https://github.com/tower-rs/tower
+tower-service v0.3.3|MIT|https://github.com/tower-rs/tower
+tracing v0.1.41|MIT|https://github.com/tokio-rs/tracing
+tracing-attributes v0.1.31|MIT|https://github.com/tokio-rs/tracing
+tracing-core v0.1.35|MIT|https://github.com/tokio-rs/tracing
+tracing-log v0.2.0|MIT|https://github.com/tokio-rs/tracing
+tracing-subscriber v0.3.20|MIT|https://github.com/tokio-rs/tracing
+transpose v0.2.3|MIT OR Apache-2.0|https://github.com/ejmahler/transpose
+tray-icon v0.21.3|MIT OR Apache-2.0|https://github.com/tauri-apps/tray-icon
+try-lock v0.2.5|MIT|https://github.com/seanmonstar/try-lock
+tungstenite v0.24.0|MIT OR Apache-2.0|https://github.com/snapview/tungstenite-rs
+typenum v1.20.0|MIT OR Apache-2.0|https://github.com/paholg/typenum
+unicase v2.9.0|MIT OR Apache-2.0|https://github.com/seanmonstar/unicase
+unicode-ident v1.0.22|(MIT OR Apache-2.0) AND Unicode-3.0|https://github.com/dtolnay/unicode-ident
+unicode-segmentation v1.12.0|MIT OR Apache-2.0|https://github.com/unicode-rs/unicode-segmentation
+unicode-truncate v1.1.0|MIT OR Apache-2.0|https://github.com/Aetf/unicode-truncate
+unicode-width v0.1.14|MIT OR Apache-2.0|https://github.com/unicode-rs/unicode-width
+unicode-width v0.2.0|MIT OR Apache-2.0|https://github.com/unicode-rs/unicode-width
+untrusted v0.9.0|ISC|https://github.com/briansmith/untrusted
+ureq v2.12.1|MIT OR Apache-2.0|https://github.com/algesten/ureq
+url v2.5.8|MIT OR Apache-2.0|https://github.com/servo/rust-url
+utf-8 v0.7.6|MIT OR Apache-2.0|https://github.com/SimonSapin/rust-utf8
+utf8_iter v1.0.4|Apache-2.0 OR MIT|https://github.com/hsivonen/utf8_iter
+utf8parse v0.2.2|Apache-2.0 OR MIT|https://github.com/alacritty/vte
+uuid v1.21.0|Apache-2.0 OR MIT|https://github.com/uuid-rs/uuid
+vcpkg v0.2.15|MIT/Apache-2.0|https://github.com/mcgoo/vcpkg-rs
+version_check v0.9.5|MIT/Apache-2.0|https://github.com/SergioBenitez/version_check
+walkdir v2.5.0|Unlicense/MIT|https://github.com/BurntSushi/walkdir
+want v0.3.1|MIT|https://github.com/seanmonstar/want
+webpki-roots v0.26.11|CDLA-Permissive-2.0|https://github.com/rustls/webpki-roots
+webpki-roots v1.0.5|CDLA-Permissive-2.0|https://github.com/rustls/webpki-roots
+which v7.0.3|MIT|https://github.com/harryfei/which-rs.git
+whisper-rs v0.16.0|Unlicense|https://codeberg.org/tazz4843/whisper-rs
+whisper-rs-sys v0.15.0|Unlicense|https://codeberg.org/tazz4843/whisper-rs
+winnow v0.7.14|MIT|https://github.com/winnow-rs/winnow
+writeable v0.6.2|Unicode-3.0|https://github.com/unicode-org/icu4x
+yoke v0.8.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+yoke-derive v0.8.1|Unicode-3.0|https://github.com/unicode-org/icu4x
+zerocopy v0.8.33|BSD-2-Clause OR Apache-2.0 OR MIT|https://github.com/google/zerocopy
+zerofrom v0.1.6|Unicode-3.0|https://github.com/unicode-org/icu4x
+zerofrom-derive v0.1.6|Unicode-3.0|https://github.com/unicode-org/icu4x
+zeroize v1.8.2|Apache-2.0 OR MIT|https://github.com/RustCrypto/utils
+zerotrie v0.2.3|Unicode-3.0|https://github.com/unicode-org/icu4x
+zerovec v0.11.5|Unicode-3.0|https://github.com/unicode-org/icu4x
+zerovec-derive v0.11.2|Unicode-3.0|https://github.com/unicode-org/icu4x
+zmij v1.0.12|MIT|https://github.com/dtolnay/zmij

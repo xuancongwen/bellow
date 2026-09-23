@@ -47,6 +47,12 @@ cp "$CACHE/voxtype/target/release/voxtype" "$RES/bin/"
 cp Resources/Modelfile Resources/models.json "$RES/"
 cp Resources/VOXTYPE-LICENSE "$RES/licenses/"
 cp LICENSE "$RES/licenses/BELLOWFLOW-LICENSE"
+cp THIRD-PARTY-NOTICES.md "$RES/licenses/THIRD-PARTY-NOTICES.md"
+# whisper.cpp (MIT) is vendored by whisper-rs-sys and statically linked into voxtype.
+WHISPER_CPP_LICENSE="$(find ~/.cargo/registry/src -path '*/whisper-rs-sys-*/whisper.cpp/LICENSE' | sort | tail -1)"
+[[ -f "$WHISPER_CPP_LICENSE" ]] || { echo 'whisper.cpp LICENSE not found in the cargo registry' >&2; exit 1; }
+cp "$WHISPER_CPP_LICENSE" "$RES/licenses/WHISPER-CPP-LICENSE"
+./scripts/crate-licenses.sh "$CACHE/voxtype" > "$RES/licenses/VOXTYPE-CRATES.txt"
 tar -xzf "$CACHE/ollama.tgz" -C "$RES/ollama"
 # The official archive is a universal ollama binary (Metal is linked into the arm64 slice)
 # plus x86_64-only CPU backends. This bundle is arm64-only: thin the binary, drop the rest.
