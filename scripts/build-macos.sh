@@ -66,6 +66,8 @@ while IFS= read -r -d '' entry; do
   if ! lipo -archs "$entry" 2>/dev/null | grep -qw arm64; then rm -f "$entry"; fi
 done < <(find "$RES/ollama" -type f ! -name ollama -print0)
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+swift scripts/make-icon.swift "$ROOT/dist/AppIcon.iconset"
+iconutil -c icns "$ROOT/dist/AppIcon.iconset" -o "$RES/AppIcon.icns"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT_VERSION" -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Contents/Info.plist"
 curl --fail --location 'https://raw.githubusercontent.com/ollama/ollama/v0.11.10/LICENSE' -o "$RES/licenses/OLLAMA-LICENSE"
 curl --fail --location 'https://raw.githubusercontent.com/openai/whisper/main/LICENSE' -o "$RES/licenses/WHISPER-LICENSE"

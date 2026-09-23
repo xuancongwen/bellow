@@ -7,7 +7,7 @@ import subprocess
 import sys
 app = pathlib.Path(sys.argv[1]).resolve()
 res = app / 'Contents/Resources'
-for name in ['bin/voxtype', 'ollama/ollama', 'Modelfile', 'models.json', 'licenses/THIRD-PARTY-NOTICES.md', 'licenses/VOXTYPE-CRATES.txt',
+for name in ['bin/voxtype', 'ollama/ollama', 'Modelfile', 'models.json', 'AppIcon.icns', 'licenses/THIRD-PARTY-NOTICES.md', 'licenses/VOXTYPE-CRATES.txt',
              'licenses/BELLOWFLOW-LICENSE', 'licenses/VOXTYPE-LICENSE', 'licenses/WHISPER-CPP-LICENSE', 'licenses/OLLAMA-LICENSE',
              'licenses/WHISPER-LICENSE', 'licenses/QWEN-LICENSE']:
     if not (res / name).is_file(): raise SystemExit(f'Missing bundle resource: {name}')

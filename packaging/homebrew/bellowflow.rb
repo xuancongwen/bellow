@@ -6,8 +6,8 @@
 # is the download. For each release, set version and paste the hash from the
 # release's .sha256 file (`brew bump-cask-pr` can do this too).
 cask "bellowflow" do
-  version "1.0.0-rc.2"
-  sha256 "0fde939525fef2096d7de1706ff9509be4ff93fee10f8e353dd3da551100f729"
+  version "1.0.0-rc.3"
+  sha256 "8b38140d669ad4830c1d71730b9bf2b0c2006d9c5c40b160b7d882a633728765"
 
   url "https://github.com/xuancongwen/bellowflow/releases/download/v#{version}/BellowFlow-#{version}-macOS-arm64.dmg"
   name "BellowFlow"

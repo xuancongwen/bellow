@@ -36,36 +36,35 @@
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
   .callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--muted); }
   nav a { margin-right: 18px; font-size: 0.95rem; }
+  a.button { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 20px; border-radius: 10px; }
+  a.button:hover { filter: brightness(1.08); }
 </style>
 </head>
 <body>
 <main>
-  <nav><a href="#install">Install</a><a href="#manual">Install by hand</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellowflow">Source on GitHub</a></nav>
+  <nav><a href="#install">Install</a><a href="#manual">Terminal install</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellowflow">Source on GitHub</a></nav>
   <h1 style="margin-top:32px">BellowFlow</h1>
   <p class="lead">Free, open-source dictation for your Mac. Press <span class="kbd">⌃⌥Space</span>, speak, press it again, and clean English text is typed into whatever app you are using.</p>
   <p>Everything runs on your Mac. No account, no API key, no network access after the one-time model download, and no transcripts leave the machine. Whisper transcribes, a local language model tidies up the wording, and the result is typed for you.</p>
   <p class="meta" id="version">Latest release: <a href="https://github.com/xuancongwen/bellowflow/releases">see GitHub</a></p>
 
   <h2 id="install">Install</h2>
-  <p>Open <strong>Terminal</strong> (it is in Applications → Utilities), paste this line, and press Return:</p>
-  <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
-  <p>That downloads the app (about 20 MB), checks it, puts <strong>BellowFlow</strong> in your Applications folder, and opens it. Then:</p>
+  <p>The app is an 18 MB download. It fetches its speech and cleanup models (about 5.3 GB, once) the first time you start it.</p>
+  <p><a class="button" id="download" href="https://github.com/xuancongwen/bellowflow/releases">Download BellowFlow for Apple Silicon</a></p>
   <ol class="steps">
+    <li>Open the downloaded <code>.dmg</code> and drag <strong>BellowFlow</strong> into <strong>Applications</strong>.</li>
+    <li><strong>Right-click BellowFlow → Open</strong> the first time. The app is not yet notarized by Apple, so a plain double-click shows an "unidentified developer" warning; right-click → Open gets past it once.</li>
     <li>In the setup window, allow <strong>Microphone</strong> and <strong>Accessibility</strong> when macOS asks, and click <strong>Start</strong>.</li>
-    <li>Wait for the status to read <strong>Ready</strong>. The first start downloads the speech and cleanup models (about 5.3 GB, once); if the download is interrupted, click Start again and it resumes.</li>
+    <li>Wait for the status to read <strong>Ready</strong> while the models download. If the download is interrupted, click Start again and it resumes.</li>
     <li>Click into any text field, press <span class="kbd">⌃⌥Space</span>, talk, and press it again.</li>
   </ol>
-  <p class="callout">Release candidates are not yet notarized by Apple. The installer clears the quarantine flag for you, so you will not see the "unidentified developer" warning. If you would rather not run a script, follow the steps below instead. You can <a href="https://github.com/xuancongwen/bellowflow/blob/master/scripts/install.sh">read the script</a> first.</p>
 
-  <h2 id="manual">Install by hand</h2>
-  <ol class="steps">
-    <li>Go to the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and download the <code>.dmg</code> file.</li>
-    <li>Optional: download the <code>.dmg.sha256</code> file next to it and check the download in Terminal:
-      <pre><code id="manual-cmd">cd ~/Downloads
-shasum -a 256 -c BellowFlow-1.0.0-rc.3-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre></li>
-    <li>Open the <code>.dmg</code> and drag <strong>BellowFlow</strong> into <strong>Applications</strong>.</li>
-    <li>The first time, <strong>right-click BellowFlow → Open</strong> and confirm, because the build is not notarized yet. Then follow the setup window as above.</li>
-  </ol>
+  <h2 id="manual">Prefer the terminal?</h2>
+  <p>This one line downloads the app, verifies its checksum, puts it in Applications, clears the Gatekeeper warning, and opens it:</p>
+  <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
+  <p class="callout">You can <a href="https://github.com/xuancongwen/bellowflow/blob/master/scripts/install.sh">read the script</a> first. To check a manual download instead, get the <code>.dmg.sha256</code> file next to the DMG on the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and run:</p>
+  <pre><code id="manual-cmd">cd ~/Downloads
+shasum -a 256 -c BellowFlow-1.0.0-rc.3-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
 
   <h2 id="requirements">Requirements</h2>
   <table>
@@ -105,6 +104,12 @@ shasum -a 256 -c BellowFlow-1.0.0-rc.3-macOS-arm64.dmg.sha256</code><button clas
       el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
       var m = /^v(.+)$/.exec(rel.tag_name);
       if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.3').join(m[1]);
+      var dmg = (rel.assets || []).filter(function (a) { return /\.dmg$/.test(a.name); })[0];
+      if (dmg) {
+        var b = document.getElementById('download');
+        b.href = dmg.browser_download_url;
+        b.textContent = 'Download BellowFlow ' + rel.tag_name + ' for Apple Silicon (' + Math.round(dmg.size / 1e6) + ' MB)';
+      }
     }).catch(function () {});
 </script>
 </body>

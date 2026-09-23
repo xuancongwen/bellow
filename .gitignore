@@ -3,3 +3,5 @@
 dist/
 __pycache__/
 .DS_Store
+Resources/AppIcon.iconset/
+Resources/AppIcon.icns

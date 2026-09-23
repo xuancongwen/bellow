@@ -18,34 +18,31 @@ checked.
 
 Website: **<https://xuancongwen.github.io/bellowflow/>**
 
-Open Terminal, paste this, and press Return:
+The app is an 18 MB download; it fetches its models (about 5.3 GB) on first
+start.
+
+1. Download `BellowFlow-<version>-macOS-arm64.dmg` from the
+   [latest release](https://github.com/xuancongwen/bellowflow/releases).
+2. Open it and drag **BellowFlow** to **Applications**.
+3. **Right-click BellowFlow → Open** the first time. Release candidates are
+   not yet notarized, so plain double-click shows an "unidentified developer"
+   warning.
+4. In the setup window, allow **Microphone** and **Accessibility** and click
+   **Start**. The first start downloads the models (resumes if interrupted);
+   the status reads **Ready · ⌃⌥Space to dictate** when done. Later launches
+   start on their own.
+
+Prefer the terminal? This does steps 1 to 3 for you, including checksum
+verification and the Gatekeeper exception:
 
 ```sh
 curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
 ```
 
-It downloads the release (about 20 MB), verifies it, puts **BellowFlow** in
-`/Applications`, and opens it. Then grant **Microphone** and **Accessibility**
-in the setup window and click **Start**. The first start downloads the speech
-and cleanup models (about 5.3 GB, once; an interrupted download resumes), and
-the status reads **Ready · ⌃⌥Space to dictate** when done. The script is
-[`scripts/install.sh`](scripts/install.sh); `BELLOWFLOW_VERSION=v1.0.0-rc.3`
-pins a release.
-
-<details>
-<summary>Install by hand instead</summary>
-
-1. From the [releases page](https://github.com/xuancongwen/bellowflow/releases)
-   download `BellowFlow-<version>-macOS-arm64.dmg`. To verify it, download the
-   `.sha256` file next to it and run `shasum -a 256 -c` on it.
-2. Open the DMG and drag **BellowFlow** to `/Applications`. Release candidates
-   are ad-hoc signed, so the first launch needs **right-click → Open** (or
-   `xattr -dr com.apple.quarantine /Applications/BellowFlow.app`).
-3. Grant **Microphone** and **Accessibility** in the setup window and click
-   **Start**. The first start downloads the models into Application Support,
-   then loads both engines. Later launches start automatically.
-
-</details>
+The script is [`scripts/install.sh`](scripts/install.sh);
+`BELLOWFLOW_VERSION=v1.0.0-rc.3` pins a release. To verify a manual download,
+fetch the `.sha256` file next to the DMG and run `shasum -a 256 -c` on it.
+A Homebrew cask is drafted (see [Homebrew](#homebrew)).
 
 Dictate: press ⌃⌥Space, speak, press it again. A small overlay shows
 listening, transcribing, and cleaning up. Do not switch windows while it is
@@ -177,8 +174,9 @@ brew install rust cmake python
 The builder compiles VoxType with Metal, compiles both Swift executables, runs
 the tests, verifies the Ollama download hash, thins the universal Ollama binary
 to arm64 (dropping its x86_64-only CPU backends), audits linked libraries and
-the model spec, stamps the version from `VERSION`, signs nested code, verifies
-the signature, and writes an 18 MB DMG:
+the model spec, renders the app icon (`scripts/make-icon.swift`), stamps the
+version from `VERSION`, signs nested code, verifies the signature, and writes
+an 18 MB DMG:
 
 ```
 dist/BellowFlow-<VERSION>-macOS-arm64.dmg
