@@ -1,0 +1,31 @@
+name: macOS
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      bundle:
+        description: Also build the full DMG (downloads several GB of models; slow)
+        type: boolean
+        default: false
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift build -c release
+      - run: python3 -m unittest discover -s tests -v
+  bundle:
+    if: github.event_name == 'workflow_dispatch' && inputs.bundle
+    runs-on: macos-15
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: brew install cmake
+      # Ad-hoc signed development build unless SIGNING_IDENTITY/NOTARY_PROFILE are provided.
+      - run: ./scripts/build-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BellowFlow-macOS-arm64
+          path: dist/BellowFlow-macOS-arm64.dmg
