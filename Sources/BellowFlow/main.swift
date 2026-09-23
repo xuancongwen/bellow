@@ -5,10 +5,60 @@ import Carbon
 import Combine
 
 let fm = FileManager.default
-let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("BellowFlow")
+// BELLOWFLOW_SUPPORT relocates the data directory (tests and scripted installs); default is Application Support.
+let support = ProcessInfo.processInfo.environment["BELLOWFLOW_SUPPORT"].map { URL(fileURLWithPath: $0) }
+    ?? fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("BellowFlow")
 let runtime = support.appendingPathComponent("run")
 let resources = Bundle.main.resourceURL!
 let endpoint = "http://127.0.0.1:11439"
+let spec = try! ModelSpec.load(resources.appendingPathComponent("models.json"))
+let models = ModelStore(spec: spec, support: support, modelfile: resources.appendingPathComponent("Modelfile"), endpoint: endpoint)
+
+func engineEnvironment() -> [String: String] {
+    var env = ProcessInfo.processInfo.environment
+    env["XDG_RUNTIME_DIR"] = runtime.path
+    env["RUST_LOG"] = "warn"
+    env["OLLAMA_HOST"] = "127.0.0.1:11439"
+    env["OLLAMA_MODELS"] = models.store.path
+    env["OLLAMA_KEEP_ALIVE"] = "-1"
+    env["OLLAMA_NUM_PARALLEL"] = "1"
+    env["OLLAMA_FLASH_ATTENTION"] = "1"
+    env["OLLAMA_KV_CACHE_TYPE"] = "q8_0"
+    env["OLLAMA_MAX_LOADED_MODELS"] = "1"
+    // The private store holds exactly the pinned blobs; never let startup pruning touch it.
+    env["OLLAMA_NOPRUNE"] = "1"
+    env["BELLOWFLOW_OLLAMA"] = endpoint
+    return env
+}
+
+/// `BellowFlow --prepare-models`: download and prepare the models without the UI, for scripts and tests.
+func prepareModelsHeadless() -> Int32 {
+    let ollamaBinary = resources.appendingPathComponent("ollama/ollama")
+    var server: Process?
+    let done = DispatchSemaphore(value: 0)
+    var status: Int32 = 0
+    var last = ""
+    let report: ModelStore.Report = { text, fraction in
+        let line = fraction.map { text + String(format: "  (%.0f%%)", $0 * 100) } ?? text
+        if line != last { print(line); last = line }
+    }
+    Task {
+        do {
+            try fm.createDirectory(at: runtime, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try models.checkDiskSpace()
+            if models.whisperReady { print("\(spec.whisper.name): ready") } else { try await models.fetchWhisper(report: report) }
+            if models.cleanupReady && models.wrapperReady { print("\(spec.cleanup.name): ready") } else {
+                server = try await models.startOllama(binary: ollamaBinary, environment: engineEnvironment(), log: nil)
+                try await models.prepareCleanup(binary: ollamaBinary, environment: engineEnvironment(), log: nil, report: report)
+            }
+            print("Models ready in \(support.path)")
+        } catch { FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8)); status = 1 }
+        server?.terminate()
+        done.signal()
+    }
+    done.wait()
+    return status
+}
 
 func shellQuote(_ value: String) -> String { "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 func tomlQuote(_ value: String) -> String {
@@ -53,6 +103,7 @@ final class AppModel: ObservableObject {
     @Published var busy = false
     @Published var ready = false
     @Published var failed = false
+    @Published var progress: Double?
     private var engine: Process?
     private var ollama: Process?
     private var timer: Timer?
@@ -64,22 +115,7 @@ final class AppModel: ObservableObject {
     private let overlay = Overlay()
     private var log: FileHandle?
     private var lastState = ""
-    var environment: [String: String] {
-        var env = ProcessInfo.processInfo.environment
-        env["XDG_RUNTIME_DIR"] = runtime.path
-        env["RUST_LOG"] = "warn"
-        env["OLLAMA_HOST"] = "127.0.0.1:11439"
-        env["OLLAMA_MODELS"] = support.appendingPathComponent("models-v1").path
-        env["OLLAMA_KEEP_ALIVE"] = "-1"
-        env["OLLAMA_NUM_PARALLEL"] = "1"
-        env["OLLAMA_FLASH_ATTENTION"] = "1"
-        env["OLLAMA_KV_CACHE_TYPE"] = "q8_0"
-        env["OLLAMA_MAX_LOADED_MODELS"] = "1"
-        // The private store holds exactly the shipped blobs; never let startup pruning touch it.
-        env["OLLAMA_NOPRUNE"] = "1"
-        env["BELLOWFLOW_OLLAMA"] = endpoint
-        return env
-    }
+    var environment: [String: String] { engineEnvironment() }
     var config: URL { support.appendingPathComponent("config.toml") }
     var microphone: Bool { AVCaptureDevice.authorizationStatus(for: .audio) == .authorized }
     var accessibility: Bool { AXIsProcessTrusted() }
@@ -127,43 +163,31 @@ final class AppModel: ObservableObject {
             // Reset diagnostic log each launch; suppress upstream info/debug transcript logging.
             fm.createFile(atPath: logURL.path, contents: nil, attributes: [.posixPermissions: 0o600])
             log = try FileHandle(forWritingTo: logURL)
+            let ollamaBinary = resources.appendingPathComponent("ollama/ollama")
             guard fm.isExecutableFile(atPath: resources.appendingPathComponent("bin/voxtype").path),
-                  fm.fileExists(atPath: resources.appendingPathComponent("whisper.bin").path) else { throw problem("This app is missing its bundled engine or Whisper model. Rebuild with scripts/build-macos.sh.") }
-            // Copy only once, outside the main thread. The signed app bundle remains immutable.
-            let destination = support.appendingPathComponent("models-v1")
-            let source = resources.appendingPathComponent("models")
-            try await Task.detached {
-                if !fm.fileExists(atPath: destination.path) {
-                    let staging = support.appendingPathComponent("models-staging")
-                    try? fm.removeItem(at: staging)
-                    try fm.copyItem(at: source, to: staging)
-                    try fm.moveItem(at: staging, to: destination)
-                }
-            }.value
-            // Refuse to take over a listener belonging to another process.
-            if await responds("/api/version") { throw problem("Port 11439 is already in use. Quit the other BellowFlow instance or listener and retry.") }
-            ollama = try spawn(resources.appendingPathComponent("ollama/ollama"), ["serve"])
-            status = "Loading Qwen 2.5 7B…"
-            var listening = false
-            for _ in 0..<120 {
-                guard ollama?.isRunning == true else { throw problem("The bundled Ollama engine exited. See engine.log.") }
-                if await responds("/api/version") { listening = true; break }
-                try await Task.sleep(nanoseconds: 250_000_000)
+                  fm.isExecutableFile(atPath: ollamaBinary.path) else { throw problem("This app is missing its bundled engines. Rebuild with scripts/build-macos.sh.") }
+            // Models are downloaded once into Application Support and verified against the pinned
+            // checksums in models.json. Later launches only check that they are in place.
+            let report: ModelStore.Report = { [weak self] text, fraction in
+                DispatchQueue.main.async { self?.status = text; self?.progress = fraction }
             }
-            guard listening else { throw problem("Ollama did not become ready within 30 seconds.") }
+            try models.checkDiskSpace()
+            if !models.whisperReady { try await models.fetchWhisper(report: report) }
+            progress = nil
+            ollama = try await models.startOllama(binary: ollamaBinary, environment: environment, log: log)
+            try await models.prepareCleanup(binary: ollamaBinary, environment: environment, log: log, report: report)
+            progress = nil
+            status = "Loading \(spec.cleanup.name)…"
             var warm = URLRequest(url: URL(string: endpoint + "/api/generate")!)
             warm.httpMethod = "POST"; warm.timeoutInterval = 180
             warm.setValue("application/json", forHTTPHeaderField: "Content-Type")
             warm.httpBody = try JSONSerialization.data(withJSONObject: ["model": "voxtype-llm-wrapper", "prompt": "", "stream": false, "keep_alive": -1])
             let (_, response) = try await URLSession.shared.data(for: warm)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw problem("The bundled cleanup model could not be loaded. See engine.log.") }
-            // Stable support paths avoid breaking the config if the app bundle moves.
-            for (name, target) in [("whisper.bin", resources.appendingPathComponent("whisper.bin")),
-                                   ("VoxClean", Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/VoxClean"))] {
-                let link = support.appendingPathComponent(name)
-                try? fm.removeItem(at: link)
-                try fm.createSymbolicLink(at: link, withDestinationURL: target)
-            }
+            // A stable support path avoids breaking the config if the app bundle moves.
+            let link = support.appendingPathComponent("VoxClean")
+            try? fm.removeItem(at: link)
+            try fm.createSymbolicLink(at: link, withDestinationURL: Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/VoxClean"))
             if !fm.fileExists(atPath: config.path) { try initialConfig().write(to: config, atomically: true, encoding: .utf8) }
             try? fm.removeItem(at: runtime.appendingPathComponent("cleanup-state"))
             try? fm.removeItem(at: runtime.appendingPathComponent("voxtype/state"))
@@ -187,16 +211,13 @@ final class AppModel: ObservableObject {
                     self.stop(); self.failed = true; self.status = "An engine stopped. Open setup to restart."
                 }
             }
+        } catch is CancellationError {
+            stop(); busy = false; progress = nil; status = "Download cancelled. Click Start to resume."
         } catch {
-            stop(); busy = false; failed = true; status = error.localizedDescription
+            stop(); busy = false; failed = true; progress = nil; status = error.localizedDescription
         }
     }
     private func problem(_ text: String) -> NSError { NSError(domain: "BellowFlow", code: 1, userInfo: [NSLocalizedDescriptionKey: text]) }
-    private func responds(_ path: String) async -> Bool {
-        var req = URLRequest(url: URL(string: endpoint + path)!); req.timeoutInterval = 1
-        guard let (_, response) = try? await URLSession.shared.data(for: req) else { return false }
-        return (response as? HTTPURLResponse)?.statusCode == 200
-    }
     private func spawn(_ binary: URL, _ args: [String]) throws -> Process {
         let p = Process(); p.executableURL = binary; p.arguments = args; p.environment = environment
         p.standardOutput = log ?? FileHandle.nullDevice; p.standardError = log ?? FileHandle.nullDevice
@@ -310,6 +331,7 @@ final class AppModel: ObservableObject {
     }
     func stop() {
         stopping = true; ready = false
+        models.cancel()
         pressure?.setEventHandler {}; pressure?.cancel(); pressure = nil; memoryBlocked = false
         timer?.invalidate(); timer = nil
         activeTimer?.invalidate(); activeTimer = nil
@@ -338,8 +360,8 @@ struct SetupView: View {
                 .foregroundStyle(model.microphone ? Color.green : Color.secondary)
             Label("Accessibility " + (model.accessibility ? "granted" : "not granted (needed to type into other apps)"), systemImage: model.accessibility ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(model.accessibility ? Color.green : Color.secondary)
-            Text("First launch prepares the bundled models and asks for macOS permissions. Models stay warm until you quit. This bundle needs 16 GB RAM or more; 24 GB+ is recommended.").font(.callout).foregroundStyle(.secondary)
-            if model.busy { ProgressView().controlSize(.small) }
+            Text("First start downloads the speech and cleanup models (about \(gigabytes(spec.whisper.bytes + spec.cleanup.bytes)), once; an interrupted download resumes) and asks for macOS permissions. Models stay warm until you quit. This edition needs 16 GB RAM or more; 24 GB+ is recommended.").font(.callout).foregroundStyle(.secondary)
+            if let progress = model.progress { ProgressView(value: progress) } else if model.busy { ProgressView().controlSize(.small) }
             Text(model.status).font(.callout).foregroundStyle(model.failed ? Color.red : Color.secondary).textSelection(.enabled)
             HStack {
                 Button("Permissions") { model.permissions() }
@@ -403,6 +425,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
     @objc func quit() { NSApp.terminate(nil) }
     func applicationWillTerminate(_ notification: Notification) { model.stop(); if let hotkey = hotkey { UnregisterEventHotKey(hotkey) } }
 }
+if CommandLine.arguments.contains("--prepare-models") { exit(prepareModelsHeadless()) }
 let app = NSApplication.shared
 let delegate = Delegate()
 app.delegate = delegate

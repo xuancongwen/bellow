@@ -2,15 +2,14 @@
 # github.com/xuancongwen/homebrew-bellowflow at Casks/bellowflow.rb; users then run
 #   brew install --cask xuancongwen/bellowflow/bellowflow
 #
-# Homebrew downloads exactly one file per cask, so `url` must point at the whole
-# DMG at a single address (Hugging Face, R2, S3...), not at the split parts on
-# GitHub Releases. Update version, url, and sha256 for each release (`brew
-# bump-cask-pr` or a step in the release workflow can do this).
+# The DMG is small (models download on first start), so the GitHub release asset
+# is the download. For each release, set version and paste the hash from the
+# release's .sha256 file (`brew bump-cask-pr` can do this too).
 cask "bellowflow" do
-  version "1.0.0-rc.1"
-  sha256 "f40899fdf18ed85a2b2a6c912010a2942921e0e31061936b5cc29f66c88333ca"
+  version "1.0.0-rc.2"
+  sha256 "0000000000000000000000000000000000000000000000000000000000000000" # from BellowFlow-#{version}-macOS-arm64.dmg.sha256
 
-  url "https://huggingface.co/xuancongwen/bellowflow/resolve/v#{version}/BellowFlow-#{version}-macOS-arm64.dmg"
+  url "https://github.com/xuancongwen/bellowflow/releases/download/v#{version}/BellowFlow-#{version}-macOS-arm64.dmg"
   name "BellowFlow"
   desc "Local, private dictation with Whisper and a cleanup language model"
   homepage "https://xuancongwen.github.io/bellowflow/"
@@ -38,7 +37,8 @@ cask "bellowflow" do
 
   caveats <<~EOS
     BellowFlow needs an Apple Silicon Mac with at least 16 GB of memory.
-    On first launch grant Microphone and Accessibility, click Start, and
-    press Control+Option+Space to dictate.
+    On first launch grant Microphone and Accessibility and click Start; the app
+    then downloads its models (about 5.3 GB, once). When it reads Ready, press
+    Control+Option+Space to dictate.
   EOS
 end

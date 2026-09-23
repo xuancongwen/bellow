@@ -1,6 +1,7 @@
 name: Pages
 # Publishes site/ plus scripts/install.sh to https://xuancongwen.github.io/bellowflow/.
-# One-time setup: repository Settings -> Pages -> Source: "GitHub Actions".
+# configure-pages enables Pages (source: GitHub Actions) on first run; if that is refused,
+# set it once by hand: repository Settings -> Pages -> Source: "GitHub Actions".
 on:
   push:
     branches: [master]
@@ -21,6 +22,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - run: bash -n scripts/install.sh
       - run: mkdir -p _site && cp -R site/. _site/ && cp scripts/install.sh _site/install.sh
       - uses: actions/upload-pages-artifact@v3

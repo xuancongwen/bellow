@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       bundle:
-        description: Also build the full DMG (downloads several GB of models; slow)
+        description: Also build the DMG (compiles VoxType with Metal; about 20 minutes)
         type: boolean
         default: false
 jobs:
@@ -18,12 +18,11 @@ jobs:
       - run: swift build -c release
       - run: python3 -m unittest discover -s tests -v
   bundle:
-    # Full DMG: manual runs when asked, and every v* tag. GitHub Release assets are capped at
-    # 2 GB each, so the 5.2 GB DMG is published as split parts plus a checksum; users
-    # reassemble with `cat`. Actions artifacts have no such cap and keep the whole DMG.
+    # DMG: manual runs when asked, and every v* tag. Models are not bundled (the app downloads
+    # them on first start), so the DMG is small and a tag publishes it directly as a pre-release.
     if: (github.event_name == 'workflow_dispatch' && inputs.bundle) || startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-15
-    timeout-minutes: 240
+    timeout-minutes: 90
     permissions:
       contents: write
     steps:
@@ -41,26 +40,22 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.sha256
-      - name: Publish pre-release with split DMG parts
+      - name: Publish pre-release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd dist
           DMG=$(ls BellowFlow-*-macOS-arm64.dmg)
-          split -b 1900m -d "$DMG" "$DMG.part-"
           cat > notes.md <<EOF
           Unsigned development build (ad-hoc signature). Apple Silicon, macOS 13+, 16 GB RAM minimum.
 
-          Easiest install (downloads, verifies, and installs everything):
+          Easiest install (downloads, verifies, and installs the app):
 
               curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
 
-          Or by hand: GitHub limits release assets to 2 GB, so the DMG is split. Reassemble and verify:
+          Or download \`$DMG\`, open it, drag BellowFlow to Applications, and right-click → Open the first time (Gatekeeper). Verify with \`shasum -a 256 -c $DMG.sha256\`.
 
-              cat $DMG.part-* > $DMG
-              shasum -a 256 -c $DMG.sha256
-
-          Then open the DMG, drag BellowFlow to Applications, and right-click → Open the first time (Gatekeeper).
+          On first start the app downloads the speech and cleanup models (about 5.3 GB, once) into Application Support.
           EOF
-          gh release create "$GITHUB_REF_NAME" --prerelease --title "BellowFlow $GITHUB_REF_NAME" --notes-file notes.md "$DMG".part-* "$DMG.sha256"
+          gh release create "$GITHUB_REF_NAME" --prerelease --title "BellowFlow $GITHUB_REF_NAME" --notes-file notes.md "$DMG" "$DMG.sha256"

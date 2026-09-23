@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Fail a release with missing models, foreign dylibs, or inconsistent model hashes."""
-import hashlib
+"""Fail a release with missing resources, foreign dylibs, or a model spec that does not match the Modelfile."""
 import json
 import pathlib
+import re
 import subprocess
 import sys
 app = pathlib.Path(sys.argv[1]).resolve()
 res = app / 'Contents/Resources'
-for name in ['bin/voxtype', 'ollama/ollama', 'whisper.bin', 'Modelfile', 'models/inventory.json']:
+for name in ['bin/voxtype', 'ollama/ollama', 'Modelfile', 'models.json']:
     if not (res / name).is_file(): raise SystemExit(f'Missing bundle resource: {name}')
 for file in app.rglob('*'):
     if not file.is_file(): continue
@@ -18,10 +18,10 @@ for file in app.rglob('*'):
         dependency = line.strip().split(' (', 1)[0]
         if dependency.startswith('/') and not dependency.startswith(('/System/', '/usr/lib/')):
             raise SystemExit(f'Nonportable dependency in {file.name}: {dependency}')
-inventory = json.loads((res / 'models/inventory.json').read_text())
-for name, expected in inventory.items():
-    hasher = hashlib.sha256()
-    with (res / 'models' / name).open('rb') as stream:
-        for chunk in iter(lambda: stream.read(8 * 1024 * 1024), b''): hasher.update(chunk)
-    if hasher.hexdigest() != expected: raise SystemExit(f'Model digest mismatch: {name}')
-print('Bundle resources, linked libraries, and model digests verified.')
+spec = json.loads((res / 'models.json').read_text())
+if not re.fullmatch(r'[0-9a-f]{64}', spec['whisper']['sha256']): raise SystemExit('Bad Whisper checksum in models.json')
+if not spec['cleanup']['digests'] or any(not re.fullmatch(r'sha256:[0-9a-f]{64}', d) for d in spec['cleanup']['digests']):
+    raise SystemExit('Bad model digests in models.json')
+base = re.search(r'^FROM\s+(\S+)', (res / 'Modelfile').read_text(), re.M).group(1)
+if base != spec['cleanup']['model']: raise SystemExit(f'Modelfile builds on {base} but models.json pins {spec["cleanup"]["model"]}')
+print('Bundle resources, linked libraries, and model spec verified.')

@@ -3,12 +3,13 @@
 #
 #   curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
 #
-# Downloads the release DMG (published as split parts because GitHub caps release
-# assets at 2 GB), reassembles it, verifies the SHA-256, copies BellowFlow.app to
-# /Applications, clears the quarantine flag (release candidates are ad-hoc signed,
-# not notarized), and opens the app. Set BELLOWFLOW_VERSION=v1.0.0-rc.1 to pin a
-# release; the default is the newest release, pre-releases included. Downloads go
-# to ~/Library/Caches/BellowFlow-installer and resume if the script is rerun.
+# Downloads the release DMG (or its split parts, for releases that exceeded GitHub's
+# 2 GB asset cap), verifies the SHA-256, copies BellowFlow.app to /Applications,
+# clears the quarantine flag (release candidates are ad-hoc signed, not notarized),
+# and opens the app. The app itself downloads its models on first start. Set
+# BELLOWFLOW_VERSION=v1.0.0-rc.2 to pin a release; the default is the newest
+# release, pre-releases included. Downloads go to ~/Library/Caches/BellowFlow-installer
+# and resume if the script is rerun.
 set -euo pipefail
 
 REPO="${BELLOWFLOW_REPO:-xuancongwen/bellowflow}"
@@ -48,7 +49,7 @@ whole_url="$(printf '%s\n' "$urls" | grep "/${dmg}$" | head -1 || true)"
 
 mkdir -p "$CACHE"
 cd "$CACHE"
-say "Installing BellowFlow ${tag} (about 5 GB to download; this may take a while)"
+say "Installing BellowFlow ${tag}"
 curl -fsSL "$sha_url" -o "${dmg}.sha256"
 
 if [[ -f "$dmg" ]] && shasum -a 256 -c "${dmg}.sha256" >/dev/null 2>&1; then
@@ -95,6 +96,7 @@ rm -f "$dmg" "${dmg}.sha256"
 
 say "Installed ${DEST}/BellowFlow.app (${tag})"
 echo
-echo "Opening BellowFlow. Grant Microphone and Accessibility in the setup window, click Start,"
-echo "wait for \"Ready\", then press Control+Option+Space to dictate."
+echo "Opening BellowFlow. Grant Microphone and Accessibility in the setup window and click Start."
+echo "The first start downloads the speech and cleanup models (about 5.3 GB, once)."
+echo "When the status reads \"Ready\", press Control+Option+Space to dictate."
 open "${DEST}/BellowFlow.app"

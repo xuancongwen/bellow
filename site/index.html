@@ -43,27 +43,26 @@
   <nav><a href="#install">Install</a><a href="#manual">Install by hand</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellowflow">Source on GitHub</a></nav>
   <h1 style="margin-top:32px">BellowFlow</h1>
   <p class="lead">Free, open-source dictation for your Mac. Press <span class="kbd">⌃⌥Space</span>, speak, press it again, and clean English text is typed into whatever app you are using.</p>
-  <p>Everything runs on your Mac. No account, no API key, no network access after install, and no transcripts leave the machine. Whisper transcribes, a local language model tidies up the wording, and the result is typed for you.</p>
+  <p>Everything runs on your Mac. No account, no API key, no network access after the one-time model download, and no transcripts leave the machine. Whisper transcribes, a local language model tidies up the wording, and the result is typed for you.</p>
   <p class="meta" id="version">Latest release: <a href="https://github.com/xuancongwen/bellowflow/releases">see GitHub</a></p>
 
   <h2 id="install">Install</h2>
   <p>Open <strong>Terminal</strong> (it is in Applications → Utilities), paste this line, and press Return:</p>
   <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
-  <p>That downloads the app (about 5 GB, so give it a few minutes), checks it, puts <strong>BellowFlow</strong> in your Applications folder, and opens it. Then:</p>
+  <p>That downloads the app (about 20 MB), checks it, puts <strong>BellowFlow</strong> in your Applications folder, and opens it. Then:</p>
   <ol class="steps">
     <li>In the setup window, allow <strong>Microphone</strong> and <strong>Accessibility</strong> when macOS asks, and click <strong>Start</strong>.</li>
-    <li>Wait for the status to read <strong>Ready</strong>. The first start takes a minute or two while the models are copied into place.</li>
+    <li>Wait for the status to read <strong>Ready</strong>. The first start downloads the speech and cleanup models (about 5.3 GB, once); if the download is interrupted, click Start again and it resumes.</li>
     <li>Click into any text field, press <span class="kbd">⌃⌥Space</span>, talk, and press it again.</li>
   </ol>
   <p class="callout">Release candidates are not yet notarized by Apple. The installer clears the quarantine flag for you, so you will not see the "unidentified developer" warning. If you would rather not run a script, follow the steps below instead. You can <a href="https://github.com/xuancongwen/bellowflow/blob/master/scripts/install.sh">read the script</a> first.</p>
 
   <h2 id="manual">Install by hand</h2>
   <ol class="steps">
-    <li>Go to the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and download every <code>.dmg.part-*</code> file plus the <code>.dmg.sha256</code> file into your Downloads folder. GitHub caps each file at 2 GB, which is why the disk image comes in parts.</li>
-    <li>Open Terminal and join and verify the parts (adjust the version if needed):
+    <li>Go to the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and download the <code>.dmg</code> file.</li>
+    <li>Optional: download the <code>.dmg.sha256</code> file next to it and check the download in Terminal:
       <pre><code id="manual-cmd">cd ~/Downloads
-cat BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.part-* &gt; BellowFlow-1.0.0-rc.1-macOS-arm64.dmg
-shasum -a 256 -c BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre></li>
+shasum -a 256 -c BellowFlow-1.0.0-rc.2-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre></li>
     <li>Open the <code>.dmg</code> and drag <strong>BellowFlow</strong> into <strong>Applications</strong>.</li>
     <li>The first time, <strong>right-click BellowFlow → Open</strong> and confirm, because the build is not notarized yet. Then follow the setup window as above.</li>
   </ol>
@@ -73,7 +72,7 @@ shasum -a 256 -c BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.sha256</code><button clas
     <tr><td>Mac</td><td>Apple Silicon (M1 or newer). Intel Macs are not supported.</td></tr>
     <tr><td>macOS</td><td>13 Ventura or newer</td></tr>
     <tr><td>Memory</td><td>16 GB minimum, 24 GB recommended. The app will not load its models on Macs with less.</td></tr>
-    <tr><td>Disk</td><td>About 15 GB free: the app plus its working copy of the models</td></tr>
+    <tr><td>Disk</td><td>About 6 GB free for the models the app downloads on first start</td></tr>
   </table>
 
   <h2>Using it</h2>
@@ -105,7 +104,7 @@ shasum -a 256 -c BellowFlow-1.0.0-rc.1-macOS-arm64.dmg.sha256</code><button clas
       var rel = list[0], el = document.getElementById('version');
       el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
       var m = /^v(.+)$/.exec(rel.tag_name);
-      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.1').join(m[1]);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.2').join(m[1]);
     }).catch(function () {});
 </script>
 </body>
