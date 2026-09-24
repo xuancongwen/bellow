@@ -4,7 +4,9 @@ import Foundation
 let input = FileHandle.standardInput.readDataToEndOfFile()
 guard let text = String(data: input, encoding: .utf8), !text.isEmpty else { exit(0) }
 let env = ProcessInfo.processInfo.environment
-let endpoint = env["BELLOWFLOW_OLLAMA"] ?? "http://127.0.0.1:11439"
+let endpoint = env["BELLOW_OLLAMA"] ?? "http://127.0.0.1:11439"
+// The wrapper name the app created for this Mac's memory tier (Resources/models.json).
+let model = env["BELLOW_MODEL"] ?? "voxtype-llm-wrapper"
 let runtime = env["XDG_RUNTIME_DIR"].map { URL(fileURLWithPath: $0) }
 let state = runtime?.appendingPathComponent("cleanup-state")
 if let state = state { try? "cleaning".write(to: state, atomically: true, encoding: .utf8) }
@@ -14,7 +16,9 @@ request.httpMethod = "POST"
 request.timeoutInterval = 55
 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 request.httpBody = try JSONSerialization.data(withJSONObject: [
-    "model": "voxtype-llm-wrapper", "stream": false, "keep_alive": -1,
+    // Qwen3.5 would otherwise reason at length before answering, and Ollama uses the GGUF's own
+    // chat template (thinking on) rather than the Modelfile's, so thinking is switched off here.
+    "model": model, "stream": false, "keep_alive": -1, "think": false,
     "messages": [["role": "user", "content": text]],
     "options": ["temperature": 0.0, "num_ctx": 4096, "num_predict": 2048]
 ])

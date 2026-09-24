@@ -1,4 +1,4 @@
-// Renders the BellowFlow app icon: the menu bar's waveform symbol on a warm rounded square
+// Renders the Bellow app icon: the menu bar's waveform symbol on a warm rounded square
 // laid out on Apple's 1024-point icon grid. Writes an .iconset directory; the build turns it
 // into AppIcon.icns with iconutil.
 //   swift scripts/make-icon.swift Resources/AppIcon.iconset

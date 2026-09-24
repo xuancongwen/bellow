@@ -49,16 +49,16 @@ signing.crt` after the import, exporting the `.crt` from the `.p12` with
 Self-signed certificate:
 
 ```sh
-mkdir -p ~/bellowflow-keys && cd ~/bellowflow-keys
+mkdir -p ~/bellow-keys && cd ~/bellow-keys
 openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
   -keyout signing.key -out signing.crt \
-  -subj "/CN=BellowFlow Signing/O=Sam Wen" \
+  -subj "/CN=Bellow Signing/O=Sam Wen" \
   -addext "keyUsage=critical,digitalSignature" \
   -addext "extendedKeyUsage=critical,codeSigning"
-openssl pkcs12 -export -inkey signing.key -in signing.crt -out signing.p12 -name "BellowFlow Signing"
+openssl pkcs12 -export -inkey signing.key -in signing.crt -out signing.p12 -name "Bellow Signing"
 security import signing.p12 -k ~/Library/Keychains/login.keychain-db -T /usr/bin/codesign
 security add-trusted-cert -r trustRoot -p codeSign -k ~/Library/Keychains/login.keychain-db signing.crt
-security find-identity -v -p codesigning | grep "BellowFlow Signing"
+security find-identity -v -p codesigning | grep "Bellow Signing"
 ```
 
 If `-addext` is rejected (old LibreSSL), use Homebrew's openssl. Skip this
@@ -67,7 +67,7 @@ block entirely if going straight to Developer ID.
 Sparkle EdDSA key:
 
 ```sh
-cd ~/bellowflow-keys
+cd ~/bellow-keys
 curl -fsSL "$(curl -fsSL https://api.github.com/repos/sparkle-project/Sparkle/releases/latest | grep browser_download_url | grep 'Sparkle-.*\.tar\.xz' | head -1 | cut -d'"' -f4)" -o sparkle.tar.xz
 mkdir sparkle && tar -xf sparkle.tar.xz -C sparkle
 ./sparkle/bin/generate_keys            # stores the private key in the login keychain, prints the public key
@@ -87,11 +87,11 @@ workflow already reads; replace their values when moving to Developer ID.
 
 1. **Package.swift**: add
    `.package(url: "https://github.com/sparkle-project/Sparkle", from: "2.7.0")`
-   and `.product(name: "Sparkle", package: "Sparkle")` to the BellowFlow
+   and `.product(name: "Sparkle", package: "Sparkle")` to the Bellow
    target. Sparkle's SPM product is a binary XCFramework, which `swift build`
    handles.
 2. **Info.plist**: `SUFeedURL` =
-   `https://xuancongwen.github.io/bellowflow/appcast.xml`, `SUPublicEDKey` =
+   `https://xuancongwen.github.io/bellow/appcast.xml`, `SUPublicEDKey` =
    the public key from `generate_keys`, `SUEnableAutomaticChecks` = true.
    No XPC services or `SUEnableInstallerLauncherService` are needed because
    the app is not sandboxed.
@@ -105,7 +105,7 @@ workflow already reads; replace their values when moving to Developer ID.
    engines.
 4. **Build script**: `swift build` links Sparkle by rpath. Copy
    `Sparkle.framework` from the build products into
-   `BellowFlow.app/Contents/Frameworks/` and link the executable with
+   `Bellow.app/Contents/Frameworks/` and link the executable with
    `-Xlinker -rpath -Xlinker @executable_path/../Frameworks`. Sign the
    framework's nested pieces (`Autoupdate`, `Updater.app`, XPC services) before
    the outer app; the existing loop over Mach-O files covers them but should

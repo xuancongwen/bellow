@@ -1,5 +1,5 @@
 name: Pages
-# Publishes site/ plus scripts/install.sh to https://xuancongwen.github.io/bellowflow/.
+# Publishes site/ plus scripts/install.sh to https://xuancongwen.github.io/bellow/.
 # configure-pages enables Pages (source: GitHub Actions) on first run; if that is refused,
 # set it once by hand: repository Settings -> Pages -> Source: "GitHub Actions".
 on:

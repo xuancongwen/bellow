@@ -58,7 +58,7 @@ jobs:
       - run: ./scripts/build-macos.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: BellowFlow-macOS-arm64
+          name: Bellow-macOS-arm64
           path: |
             dist/*.dmg
             dist/*.sha256
@@ -68,17 +68,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd dist
-          DMG=$(ls BellowFlow-*-macOS-arm64.dmg)
-          if [[ -n "${SIGNING_IDENTITY:-}" ]]; then SIGNED="Developer ID signed and notarized."; OPEN="double-click BellowFlow"; else SIGNED="Unsigned development build (ad-hoc signature)."; OPEN="when the first launch is blocked, allow it once in System Settings → Privacy & Security → Open Anyway"; fi
+          DMG=$(ls Bellow-*-macOS-arm64.dmg)
+          if [[ -n "${SIGNING_IDENTITY:-}" ]]; then SIGNED="Developer ID signed and notarized."; OPEN="double-click Bellow"; else SIGNED="Unsigned development build (ad-hoc signature)."; OPEN="when the first launch is blocked, allow it once in System Settings → Privacy & Security → Open Anyway"; fi
           cat > notes.md <<EOF
-          $SIGNED Apple Silicon, macOS 13+, 16 GB RAM minimum.
+          $SIGNED Apple Silicon, macOS 13+, 8 GB RAM minimum (more than 16 GB gets the larger Max cleanup model).
 
           Easiest install (downloads, verifies, and installs the app):
 
-              curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
+              curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash
 
-          Or download \`$DMG\`, open it, drag BellowFlow to Applications, and $OPEN. Verify with \`shasum -a 256 -c $DMG.sha256\`.
+          Or download \`$DMG\`, open it, drag Bellow to Applications, and $OPEN. Verify with \`shasum -a 256 -c $DMG.sha256\`.
 
-          On first start the app downloads the speech and cleanup models (about 5.3 GB, once) into Application Support.
+          On first start the app downloads the speech and cleanup models (2 to 3.4 GB depending on the Mac's memory, once) into Application Support.
           EOF
-          gh release create "$GITHUB_REF_NAME" --prerelease --title "BellowFlow $GITHUB_REF_NAME" --notes-file notes.md "$DMG" "$DMG.sha256"
+          gh release create "$GITHUB_REF_NAME" --prerelease --title "Bellow $GITHUB_REF_NAME" --notes-file notes.md "$DMG" "$DMG.sha256"

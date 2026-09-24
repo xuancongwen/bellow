@@ -5,17 +5,40 @@
     "sha256": "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2",
     "bytes": 574041195
   },
-  "cleanup": {
-    "name": "Qwen 2.5 7B",
-    "model": "qwen2.5:7b",
-    "wrapper": "voxtype-llm-wrapper",
-    "bytes": 4683087332,
-    "digests": [
-      "sha256:2f15b3218f0552c60647ce60ada83632d2c09755b16259b13e3e4458e9ae419d",
-      "sha256:2bada8a7450677000f678be90653b85d364de7db25eb5ea54136ada5f3933730",
-      "sha256:66b9ea09bd5b7099cbb4fc820f31b575c0366fa439b08245566692c6784e281e",
-      "sha256:eb4402837c7829a690fa845de4d7f3fd842c2adee476d5341da8a46ea9255175",
-      "sha256:832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
-    ]
-  }
+  "tiers": [
+    {
+      "name": "max",
+      "label": "Max",
+      "startsAtGiB": 18,
+      "summary": "The most careful edits: resolves self-corrections, formats emails and lists, and keeps technical terms. Uses the most memory and takes a moment longer to answer.",
+      "cleanup": {
+        "name": "Qwen3.5 4B",
+        "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf",
+        "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+        "bytes": 2740937888,
+        "wrapper": "voxtype-llm-wrapper",
+        "modelfile": "Modelfile.max",
+        "needsGiB": 16,
+        "workingSetGiB": 5,
+        "reserveGiB": 2
+      }
+    },
+    {
+      "name": "standard",
+      "label": "Standard",
+      "startsAtGiB": 8,
+      "summary": "Nearly the same cleanup with less memory and quicker answers. The right choice for Macs with 16 GB or less.",
+      "cleanup": {
+        "name": "Qwen3.5 2B",
+        "url": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf",
+        "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
+        "bytes": 1280835840,
+        "wrapper": "voxtype-llm-wrapper",
+        "modelfile": "Modelfile.standard",
+        "needsGiB": 8,
+        "workingSetGiB": 3.5,
+        "reserveGiB": 1
+      }
+    }
+  ]
 }

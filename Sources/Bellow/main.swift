@@ -5,14 +5,32 @@ import Carbon
 import Combine
 
 let fm = FileManager.default
-// BELLOWFLOW_SUPPORT relocates the data directory (tests and scripted installs); default is Application Support.
-let support = ProcessInfo.processInfo.environment["BELLOWFLOW_SUPPORT"].map { URL(fileURLWithPath: $0) }
-    ?? fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("BellowFlow")
+// BELLOW_SUPPORT relocates the data directory (tests and scripted installs); default is Application Support.
+let support = ProcessInfo.processInfo.environment["BELLOW_SUPPORT"].map { URL(fileURLWithPath: $0) }
+    ?? fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Bellow")
 let runtime = support.appendingPathComponent("run")
+// One-time move of the data directory written under the app's old name (BellowFlow), so existing
+// installs keep their downloaded models. Skipped while the old app is still running or holds the directory.
+if ProcessInfo.processInfo.environment["BELLOW_SUPPORT"] == nil, !fm.fileExists(atPath: support.path) {
+    let legacy = support.deletingLastPathComponent().appendingPathComponent("BellowFlow")
+    if fm.fileExists(atPath: legacy.path),
+       NSRunningApplication.runningApplications(withBundleIdentifier: "org.bellowflow.app").isEmpty,
+       (try? fm.moveItem(at: legacy, to: support)) != nil {
+        let store = support.appendingPathComponent("models-v1")
+        try? fm.moveItem(at: store.appendingPathComponent(".bellowflow-wrapper"), to: store.appendingPathComponent(".bellow-wrapper"))
+    }
+}
 let resources = Bundle.main.resourceURL!
 let endpoint = "http://127.0.0.1:11439"
 let spec = try! ModelSpec.load(resources.appendingPathComponent("models.json"))
-let models = ModelStore(spec: spec, support: support, modelfile: resources.appendingPathComponent("Modelfile"), endpoint: endpoint)
+let hardware = Hardware.current()
+// Physical memory picks the tier and therefore the cleanup model, unless the user chose one in the
+// setup window. A Mac whose tier has no model pinned yet is served by the next larger one when it
+// meets that model's floor; otherwise start() refuses, and the largest model only labels the window.
+func currentSelection(_ choice: String? = TierChoice.load()) -> Selection? {
+    MemoryBudget.select(in: spec, physicalGiB: hardware.physicalGiB, preferred: choice)
+}
+let models = ModelStore(whisper: spec.whisper, tier: currentSelection()?.serving ?? spec.largestPinned, support: support, resources: resources, endpoint: endpoint)
 
 func engineEnvironment() -> [String: String] {
     var env = ProcessInfo.processInfo.environment
@@ -27,11 +45,12 @@ func engineEnvironment() -> [String: String] {
     env["OLLAMA_MAX_LOADED_MODELS"] = "1"
     // The private store holds exactly the pinned blobs; never let startup pruning touch it.
     env["OLLAMA_NOPRUNE"] = "1"
-    env["BELLOWFLOW_OLLAMA"] = endpoint
+    env["BELLOW_OLLAMA"] = endpoint
+    env["BELLOW_MODEL"] = models.cleanup.wrapper
     return env
 }
 
-/// `BellowFlow --prepare-models`: download and prepare the models without the UI, for scripts and tests.
+/// `Bellow --prepare-models`: download and prepare the models without the UI, for scripts and tests.
 func prepareModelsHeadless() -> Int32 {
     let ollamaBinary = resources.appendingPathComponent("ollama/ollama")
     var server: Process?
@@ -46,8 +65,9 @@ func prepareModelsHeadless() -> Int32 {
         do {
             try fm.createDirectory(at: runtime, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
             try models.checkDiskSpace()
-            if models.whisperReady { print("\(spec.whisper.name): ready") } else { try await models.fetchWhisper(report: report) }
-            if models.cleanupReady && models.wrapperReady { print("\(spec.cleanup.name): ready") } else {
+            if models.whisperReady { print("Speech model: ready") } else { try await models.fetchWhisper(report: report) }
+            if !models.cleanupReady { try await models.fetchCleanup(report: report) }
+            if models.wrapperReady { print("\(models.tier.label) model: ready") } else {
                 server = try await models.startOllama(binary: ollamaBinary, environment: engineEnvironment(), log: nil)
                 try await models.prepareCleanup(binary: ollamaBinary, environment: engineEnvironment(), log: nil, report: report)
             }
@@ -67,6 +87,7 @@ func tomlQuote(_ value: String) -> String {
 
 final class Overlay {
     private let label = NSTextField(labelWithString: "")
+    private let meter = LevelView(frame: NSRect(x: 196, y: 14, width: 68, height: 24))
     private let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 280, height: 52), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
     init() {
         panel.level = .floating
@@ -86,7 +107,16 @@ final class Overlay {
         label.font = .systemFont(ofSize: 15, weight: .medium)
         label.alignment = .center
         visual.addSubview(label)
+        meter.isHidden = true
+        visual.addSubview(meter)
         panel.contentView = visual
+    }
+    /// Live microphone level while recording; nil hides the meter and gives the text the full width.
+    func level(_ value: Float?) {
+        if let value = value {
+            if meter.isHidden { meter.reset(); meter.isHidden = false; label.frame = NSRect(x: 16, y: 16, width: 176, height: 22) }
+            meter.push(value)
+        } else if !meter.isHidden { meter.isHidden = true; label.frame = NSRect(x: 16, y: 16, width: 248, height: 22) }
     }
     func show(_ text: String) {
         label.stringValue = text
@@ -105,6 +135,29 @@ final class AppModel: ObservableObject {
     @Published var failed = false
     @Published var progress: Double?
     @Published var shortcut = Shortcut.load()
+    /// The chosen cleanup tier, or nil for automatic. Saved in UserDefaults.
+    @Published var choice: String? = TierChoice.load()
+    var selection: Selection? { currentSelection(choice) }
+    /// "Max model · Qwen 2.5 7B" for the setup window.
+    var modelLine: String {
+        guard let selection = selection else { return "No cleanup model for this Mac yet" }
+        return "\(selection.serving.label) model · \(selection.cleanup.name)"
+    }
+    var memoryLine: String {
+        let floor = spec.tiers.compactMap(\.cleanup).map(\.needsGiB).min() ?? 0
+        return "This Mac has \(MemoryBudget.gb(hardware.physicalGiB)) of memory; this version needs \(MemoryBudget.gb(floor)) or more."
+    }
+    private var restartPending = false
+    /// Switches the cleanup model. A running or loading setup is restarted so the choice takes effect now.
+    func choose(_ name: String?) {
+        guard name != choice else { return }
+        choice = name; TierChoice.save(name)
+        guard let serving = selection?.serving, serving.cleanup != nil else { return }
+        guard serving.name != models.tier.name else { return }
+        models.tier = serving
+        if ready { stop(); start() }
+        else if busy { restartPending = true; stop() }
+    }
     /// Set by the delegate: re-registers the hot key and reports whether the combination was free.
     var registerShortcut: ((Shortcut) -> Bool)?
     func setShortcut(_ new: Shortcut) {
@@ -124,6 +177,7 @@ final class AppModel: ObservableObject {
     private var pressure: DispatchSourceMemoryPressure?
     private var memoryBlocked = false
     private let overlay = Overlay()
+    private let meter = LevelMeter()
     private var log: FileHandle?
     private var lastState = ""
     var environment: [String: String] { engineEnvironment() }
@@ -161,7 +215,7 @@ final class AppModel: ObservableObject {
             status = "Allow Microphone and Accessibility; Start becomes available once both are granted."
             permissions(); return
         }
-        if let reason = MemoryBudget.refusal() { status = reason; failed = true; return }
+        if let reason = MemoryBudget.refusal(spec: spec, hardware: hardware, preferred: choice) { status = reason; failed = true; return }
         busy = true; failed = false; stopping = false
         Task { await launch() }
     }
@@ -174,6 +228,7 @@ final class AppModel: ObservableObject {
             // Reset diagnostic log each launch; suppress upstream info/debug transcript logging.
             fm.createFile(atPath: logURL.path, contents: nil, attributes: [.posixPermissions: 0o600])
             log = try FileHandle(forWritingTo: logURL)
+            log?.write(Data((MemoryBudget.report(spec: spec, hardware: hardware, preferred: choice) + "\n").utf8))
             let ollamaBinary = resources.appendingPathComponent("ollama/ollama")
             guard fm.isExecutableFile(atPath: resources.appendingPathComponent("bin/voxtype").path),
                   fm.isExecutableFile(atPath: ollamaBinary.path) else { throw problem("This app is missing its bundled engines. Rebuild with scripts/build-macos.sh.") }
@@ -184,15 +239,16 @@ final class AppModel: ObservableObject {
             }
             try models.checkDiskSpace()
             if !models.whisperReady { try await models.fetchWhisper(report: report) }
+            if !models.cleanupReady { try await models.fetchCleanup(report: report) }
             progress = nil
             ollama = try await models.startOllama(binary: ollamaBinary, environment: environment, log: log)
             try await models.prepareCleanup(binary: ollamaBinary, environment: environment, log: log, report: report)
             progress = nil
-            status = "Loading \(spec.cleanup.name)…"
+            status = "Loading the \(models.tier.label) model…"
             var warm = URLRequest(url: URL(string: endpoint + "/api/generate")!)
             warm.httpMethod = "POST"; warm.timeoutInterval = 180
             warm.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            warm.httpBody = try JSONSerialization.data(withJSONObject: ["model": "voxtype-llm-wrapper", "prompt": "", "stream": false, "keep_alive": -1])
+            warm.httpBody = try JSONSerialization.data(withJSONObject: ["model": models.cleanup.wrapper, "prompt": "", "stream": false, "keep_alive": -1, "think": false])
             let (_, response) = try await URLSession.shared.data(for: warm)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw problem("The bundled cleanup model could not be loaded. See engine.log.") }
             // A stable support path avoids breaking the config if the app bundle moves.
@@ -203,14 +259,14 @@ final class AppModel: ObservableObject {
             try? fm.removeItem(at: runtime.appendingPathComponent("cleanup-state"))
             try? fm.removeItem(at: runtime.appendingPathComponent("voxtype/state"))
             engine = try spawn(resources.appendingPathComponent("bin/voxtype"), ["--config", config.path, "daemon"])
-            status = "Loading Whisper…"
+            status = "Loading the speech model…"
             var engineReady = false
             for _ in 0..<720 {
                 guard engine?.isRunning == true else { throw problem("VoxType exited. Check engine.log and the helper's macOS permissions.") }
                 if readState() == "idle" { engineReady = true; break }
                 try await Task.sleep(nanoseconds: 250_000_000)
             }
-            guard engineReady else { throw problem("Whisper did not become ready within three minutes.") }
+            guard engineReady else { throw problem("The speech model did not become ready within three minutes.") }
             startWatching()
             watchMemory()
             ready = true; busy = false; status = "Ready · \(shortcut.label) to dictate"
@@ -227,8 +283,9 @@ final class AppModel: ObservableObject {
         } catch {
             stop(); busy = false; failed = true; progress = nil; status = error.localizedDescription
         }
+        if restartPending { restartPending = false; stop(); busy = false; start() }
     }
-    private func problem(_ text: String) -> NSError { NSError(domain: "BellowFlow", code: 1, userInfo: [NSLocalizedDescriptionKey: text]) }
+    private func problem(_ text: String) -> NSError { NSError(domain: "Bellow", code: 1, userInfo: [NSLocalizedDescriptionKey: text]) }
     private func spawn(_ binary: URL, _ args: [String]) throws -> Process {
         let p = Process(); p.executableURL = binary; p.arguments = args; p.environment = environment
         p.standardOutput = log ?? FileHandle.nullDevice; p.standardError = log ?? FileHandle.nullDevice
@@ -240,16 +297,16 @@ final class AppModel: ObservableObject {
         // Every key below exists in the pinned VoxType. Upstream ignores unknown keys silently,
         // so tests/test_config_template.py guards this template.
         """
-        # BellowFlow managed VoxType configuration. Edit, then quit and restart BellowFlow.
+        # Bellow managed VoxType configuration. Edit, then quit and restart Bellow.
         engine = "whisper"
         state_file = "auto"
 
         [hotkey]
-        # BellowFlow owns the global shortcut; the built-in hotkey would need Input Monitoring.
+        # Bellow owns the global shortcut; the built-in hotkey would need Input Monitoring.
         enabled = false
 
         [osd]
-        # BellowFlow draws its own overlay.
+        # Bellow draws its own overlay.
         enabled = false
 
         [audio]
@@ -315,7 +372,7 @@ final class AppModel: ObservableObject {
             guard let self = self else { return }
             if source.data.contains(.critical) || source.data.contains(.warning) {
                 self.memoryBlocked = true
-                self.status = "Memory pressure: new recordings paused. Close other apps, or quit BellowFlow to release its models."
+                self.status = "Memory pressure: new recordings paused. Close other apps, or quit Bellow to release its models."
                 self.overlay.show("Memory pressure · dictation paused")
             } else {
                 self.memoryBlocked = false
@@ -329,6 +386,9 @@ final class AppModel: ObservableObject {
     private func updateOverlay() {
         let state = readState()
         if memoryBlocked && state == "idle" { overlay.show("Memory pressure · dictation paused"); return }
+        if state == "recording" {
+            if lastState != "recording" { meter.onLevel = { [weak self] level in self?.overlay.level(level) }; meter.start() }
+        } else if lastState == "recording" { meter.stop(); overlay.level(nil) }
         if state == "idle" { overlay.hide(); activeTimer?.invalidate(); activeTimer = nil }
         else if state == "recording" { overlay.show("●  Listening · \(shortcut.label) to finish") }
         else if state == "transcribing" {
@@ -347,6 +407,7 @@ final class AppModel: ObservableObject {
         timer?.invalidate(); timer = nil
         activeTimer?.invalidate(); activeTimer = nil
         watcher?.cancel(); watcher = nil
+        meter.stop(); overlay.level(nil); lastState = ""
         for p in [engine, ollama].compactMap({ $0 }) where p.isRunning {
             p.terminate()
             DispatchQueue.global().asyncAfter(deadline: .now() + 3) { if p.isRunning { kill(p.processIdentifier, SIGKILL) } }
@@ -355,8 +416,46 @@ final class AppModel: ObservableObject {
     }
 }
 
+/// The sheet behind "Change…": every tier with why you would pick it, and Automatic on top.
+struct ModelChooser: View {
+    @ObservedObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    private var automatic: ModelSpec.Tier? { currentSelection(nil)?.serving }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Cleanup model").font(.title2.bold())
+            Text("After each dictation a language model on this Mac tidies the transcript. Larger models edit more carefully but need more memory and take longer to answer. Automatic picks the largest one this Mac runs comfortably.")
+                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            row(nil, "Automatic", automatic.map { "Recommended. On this Mac that is the \($0.label) model." } ?? "No model fits this Mac yet.", nil)
+            ForEach(spec.tiers, id: \.name) { tier in
+                let reason = MemoryBudget.unavailable(tier, physicalGiB: hardware.physicalGiB)
+                let need = tier.cleanup.map { " Needs \(MemoryBudget.gb($0.needsGiB)) of memory, best with \(MemoryBudget.gb(tier.startsAtGiB)) or more; a \(gigabytes($0.bytes)) download." } ?? ""
+                row(tier.name, tier.label, tier.summary + need, reason)
+            }
+            Text("This Mac: \(hardware.chip), \(MemoryBudget.gb(hardware.physicalGiB)) of memory. Changing the model downloads it once and restarts dictation.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            HStack { Spacer(); Button("Done") { dismiss() }.keyboardShortcut(.defaultAction) }
+        }.padding(24).frame(width: 480)
+    }
+    private func row(_ name: String?, _ title: String, _ detail: String, _ reason: String?) -> some View {
+        let selected = model.choice == name
+        return Button { model.choose(name) } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle").foregroundStyle(selected ? Color.accentColor : Color.secondary).padding(.top, 2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).fontWeight(.semibold)
+                    Text(detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if let reason = reason { Text(reason).font(.caption).foregroundStyle(.tertiary) }
+                }
+                Spacer(minLength: 0)
+            }.contentShape(Rectangle())
+        }.buttonStyle(.plain).disabled(reason != nil).opacity(reason == nil ? 1 : 0.55)
+    }
+}
+
 struct SetupView: View {
     @ObservedObject var model: AppModel
+    @State private var showModels = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Image(systemName: "waveform.circle.fill").font(.system(size: 48)).foregroundStyle(.mint)
@@ -364,14 +463,18 @@ struct SetupView: View {
             Text("Local dictation, with your words cleaned up and typed wherever you're working.").font(.title3).foregroundStyle(.secondary)
             Divider()
             Label("Whisper large-v3-turbo Q5 · English", systemImage: "mic")
-            Label("Qwen 2.5 7B · your original Modelfile", systemImage: "sparkles")
+            HStack {
+                Label(model.modelLine, systemImage: "sparkles")
+                Spacer()
+                Button("Change…") { showModels = true }
+            }.sheet(isPresented: $showModels) { ModelChooser(model: model) }
             ShortcutRecorder(model: model)
             Divider()
             Label("Microphone " + (model.microphone ? "granted" : "not granted"), systemImage: model.microphone ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(model.microphone ? Color.green : Color.secondary)
             Label("Accessibility " + (model.accessibility ? "granted" : "not granted (needed to type into other apps)"), systemImage: model.accessibility ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(model.accessibility ? Color.green : Color.secondary)
-            Text("First start downloads the speech and cleanup models (about \(gigabytes(spec.whisper.bytes + spec.cleanup.bytes)), once; an interrupted download resumes) and asks for macOS permissions. Models stay warm until you quit. This edition needs 16 GB RAM or more; 24 GB+ is recommended.").font(.callout).foregroundStyle(.secondary)
+            Text("First start downloads the speech and cleanup models (about \(gigabytes(spec.whisper.bytes + models.cleanup.bytes)), once; an interrupted download resumes) and asks for macOS permissions. Models stay warm until you quit. \(model.memoryLine)").font(.callout).foregroundStyle(.secondary)
             if let progress = model.progress { ProgressView(value: progress) } else if model.busy { ProgressView().controlSize(.small) }
             Text(model.status).font(.callout).foregroundStyle(model.failed ? Color.red : Color.secondary).textSelection(.enabled)
             HStack {
@@ -393,19 +496,19 @@ final class Delegate: NSObject, NSApplicationDelegate {
     var readyObserver: AnyCancellable?
     var toggleItem: NSMenuItem?
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let siblings = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "org.bellowflow.app")
+        let siblings = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "org.bellow.app")
         if siblings.count > 1 { NSApp.terminate(nil); return }
         NSApp.setActivationPolicy(.accessory)
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "BellowFlow")
+        item.button?.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Bellow")
         let menu = NSMenu()
-        for (title, selector) in [("Start / finish dictation  \(model.shortcut.label)", #selector(toggle)), ("Cancel recording", #selector(cancel)), ("Setup and status…", #selector(showSetup)), ("Quit BellowFlow", #selector(quit))] {
+        for (title, selector) in [("Start / finish dictation  \(model.shortcut.label)", #selector(toggle)), ("Cancel recording", #selector(cancel)), ("Setup and status…", #selector(showSetup)), ("Quit Bellow", #selector(quit))] {
             let entry = NSMenuItem(title: title, action: selector, keyEquivalent: ""); entry.target = self; menu.addItem(entry)
             if selector == #selector(toggle) { toggleItem = entry }
         }
         item.menu = menu
         window = NSWindow(contentRect: .zero, styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "BellowFlow"; window.isReleasedWhenClosed = false
+        window.title = "Bellow"; window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: SetupView(model: model))
         window.setContentSize(NSSize(width: 530, height: 640)); window.center()
         // The app has no Dock icon, so the setup window must stay reachable while the user is
@@ -438,6 +541,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) { model.stop() }
 }
 if CommandLine.arguments.contains("--prepare-models") { exit(prepareModelsHeadless()) }
+// `Bellow --hardware`: print what this Mac has and which tier and model it gets, then exit.
+if CommandLine.arguments.contains("--hardware") { print(MemoryBudget.report(spec: spec, hardware: hardware, preferred: TierChoice.load())); exit(0) }
 let app = NSApplication.shared
 let delegate = Delegate()
 app.delegate = delegate

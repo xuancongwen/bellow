@@ -1,5 +1,10 @@
 # Memory profile
 
+**Historical (1.0.0-rc.4).** These numbers are for Qwen 2.5 7B on Ollama
+0.11.10. The current bundle ships Ollama 0.34.4 with Qwen3.5 4B (Max) and
+2B (Standard); their resident sizes are in the README's system requirements
+and the admission constants in `Resources/models.json`.
+
 Measured 2026-09-23 on an Apple M1 Max, 64 GB, macOS 26.6, with the exact
 binaries and settings the bundle ships: the pinned Ollama `v0.11.10` (arm64
 slice) with `OLLAMA_FLASH_ATTENTION=1`, `OLLAMA_KV_CACHE_TYPE=q8_0`,
@@ -46,7 +51,7 @@ Transcripts of the synthetic clips were word-accurate.
 | Qwen weights (file-backed, mmapped) | 4.4 GB | 4.4 GB |
 | Ollama server + runner (dirty) | 0.28 GB | 0.31 GB |
 | VoxType + Whisper (dirty) | 0.64 GB | 0.86 GB |
-| BellowFlow shell + VoxClean (estimated, not measured) | < 0.1 GB | < 0.1 GB |
+| Bellow shell + VoxClean (estimated, not measured) | < 0.1 GB | < 0.1 GB |
 | **Total** | **≈ 5.4 GB** | **≈ 5.7 GB** |
 
 `MemoryBudget.swift` admits a launch only with 7 GiB (working set) + 2 GiB
@@ -71,7 +76,7 @@ overhead; the constants were left unchanged.
   files are identical.
 
 Not yet measured: a 16 GB or 24 GB Mac under real memory pressure (acceptance
-item 7), and the BellowFlow GUI process itself.
+item 7), and the Bellow GUI process itself.
 
 ## Reproducing
 
@@ -81,7 +86,7 @@ OLLAMA_HOST=127.0.0.1:11439 OLLAMA_MODELS=.cache/models OLLAMA_KEEP_ALIVE=-1 OLL
 OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 OLLAMA_MAX_LOADED_MODELS=1 OLLAMA_NOPRUNE=1 ollama serve &
 curl -s http://127.0.0.1:11439/api/generate -d '{"model":"voxtype-llm-wrapper","prompt":"","keep_alive":-1}'
 footprint -p <server pid>; footprint -p <runner pid>
-echo "um so hey john does tuesday work" | BELLOWFLOW_OLLAMA=http://127.0.0.1:11439 .build/release/VoxClean
+echo "um so hey john does tuesday work" | BELLOW_OLLAMA=http://127.0.0.1:11439 .build/release/VoxClean
 
 # Whisper: peak of a one-shot transcription, then the daemon's resident cost
 /usr/bin/time -l voxtype --config config.toml transcribe clip-16k-mono.wav

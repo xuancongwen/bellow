@@ -1,4 +1,4 @@
-# BellowFlow: plan for selling the app
+# Bellow: plan for selling the app
 
 Written 2026-09-23. Parked until friends-and-family testing is done. Nothing
 here is started; it is the plan to pick up later.

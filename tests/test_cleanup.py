@@ -22,7 +22,7 @@ class CleanupTests(unittest.TestCase):
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
         try:
             result = subprocess.run([str(BINARY)], input='how do I restart the server', text=True, capture_output=True,
-                env={**os.environ, 'BELLOWFLOW_OLLAMA': f'http://127.0.0.1:{server.server_port}'}, timeout=10)
+                env={**os.environ, 'BELLOW_OLLAMA': f'http://127.0.0.1:{server.server_port}'}, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(requests[0]['keep_alive'], -1)
             self.assertEqual(requests[0]['messages'][0]['content'], 'how do I restart the server')

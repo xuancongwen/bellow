@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BellowFlow</title>
+<title>Bellow</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <meta name="theme-color" content="#b5471f">
-<meta property="og:title" content="BellowFlow">
+<meta property="og:title" content="Bellow">
 <meta property="og:description" content="Free, open-source, fully local dictation for Apple Silicon Macs.">
-<meta property="og:image" content="https://xuancongwen.github.io/bellowflow/favicon-512.png">
-<meta name="description" content="BellowFlow is a free, open-source dictation app for Apple Silicon Macs. Press a shortcut, speak, and clean text is typed wherever you are. Everything runs on your Mac.">
+<meta property="og:image" content="https://xuancongwen.github.io/bellow/favicon-512.png">
+<meta name="description" content="Bellow is a free, open-source dictation app for Apple Silicon Macs. Press a shortcut, speak, and clean text is typed wherever you are. Everything runs on your Mac.">
 <style>
   :root {
     --bg: #fbfaf7; --fg: #1c1b18; --muted: #6b675e; --line: #e4e0d6;
@@ -49,18 +49,18 @@
 </head>
 <body>
 <main>
-  <nav><a href="#install">Install</a><a href="#manual">Terminal install</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellowflow">Source on GitHub</a></nav>
-  <h1 style="margin-top:32px">BellowFlow</h1>
+  <nav><a href="#install">Install</a><a href="#manual">Terminal install</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellow">Source on GitHub</a></nav>
+  <h1 style="margin-top:32px">Bellow</h1>
   <p class="lead">Free, open-source dictation for your Mac. Press <span class="kbd">⌃⌥X</span>, speak, press it again, and clean English text is typed into whatever app you are using.</p>
   <p>Everything runs on your Mac. No account, no API key, no network access after the one-time model download, and no transcripts leave the machine. Whisper transcribes, a local language model tidies up the wording, and the result is typed for you.</p>
-  <p class="meta" id="version">Latest release: <a href="https://github.com/xuancongwen/bellowflow/releases">see GitHub</a></p>
+  <p class="meta" id="version">Latest release: <a href="https://github.com/xuancongwen/bellow/releases">see GitHub</a></p>
 
   <h2 id="install">Install</h2>
-  <p>The app is an 18 MB download. It fetches its speech and cleanup models (about 5.3 GB, once) the first time you start it.</p>
-  <p><a class="button" id="download" href="https://github.com/xuancongwen/bellowflow/releases">Download BellowFlow for Apple Silicon</a></p>
+  <p>The app is a small download. It fetches its speech and cleanup models (2 to 3.4 GB, once) the first time you start it.</p>
+  <p><a class="button" id="download" href="https://github.com/xuancongwen/bellow/releases">Download Bellow for Apple Silicon</a></p>
   <ol class="steps">
-    <li>Open the downloaded <code>.dmg</code> and drag <strong>BellowFlow</strong> into <strong>Applications</strong>.</li>
-    <li>The first launch is blocked, because the app is not yet notarized by Apple. Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down to the message about BellowFlow, click <strong>Open Anyway</strong>, and confirm. This is a one-time step. (On macOS 15 and later, right-click → Open no longer works for unsigned apps; the terminal install below avoids the step entirely.)</li>
+    <li>Open the downloaded <code>.dmg</code> and drag <strong>Bellow</strong> into <strong>Applications</strong>.</li>
+    <li>The first launch is blocked, because the app is not yet notarized by Apple. Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down to the message about Bellow, click <strong>Open Anyway</strong>, and confirm. This is a one-time step. (On macOS 15 and later, right-click → Open no longer works for unsigned apps; the terminal install below avoids the step entirely.)</li>
     <li>In the setup window, allow <strong>Microphone</strong> and <strong>Accessibility</strong> when macOS asks, and click <strong>Start</strong>.</li>
     <li>Wait for the status to read <strong>Ready</strong> while the models download. If the download is interrupted, click Start again and it resumes.</li>
     <li>Click into any text field, press <span class="kbd">⌃⌥X</span>, talk, and press it again.</li>
@@ -68,16 +68,16 @@
 
   <h2 id="manual">Prefer the terminal?</h2>
   <p>This one line downloads the app, verifies its checksum, puts it in Applications, clears the Gatekeeper warning, and opens it:</p>
-  <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
-  <p class="callout">You can <a href="https://github.com/xuancongwen/bellowflow/blob/master/scripts/install.sh">read the script</a> first. To check a manual download instead, get the <code>.dmg.sha256</code> file next to the DMG on the <a href="https://github.com/xuancongwen/bellowflow/releases">releases page</a> and run:</p>
+  <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
+  <p class="callout">You can <a href="https://github.com/xuancongwen/bellow/blob/master/scripts/install.sh">read the script</a> first. To check a manual download instead, get the <code>.dmg.sha256</code> file next to the DMG on the <a href="https://github.com/xuancongwen/bellow/releases">releases page</a> and run:</p>
   <pre><code id="manual-cmd">cd ~/Downloads
-shasum -a 256 -c BellowFlow-1.0.0-rc.4-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
+shasum -a 256 -c Bellow-1.0.0-rc.5-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
 
   <h2 id="requirements">Requirements</h2>
   <table>
     <tr><td>Mac</td><td>Apple Silicon (M1 or newer). Intel Macs are not supported.</td></tr>
     <tr><td>macOS</td><td>13 Ventura or newer</td></tr>
-    <tr><td>Memory</td><td>16 GB minimum, 24 GB recommended. The app will not load its models on Macs with less.</td></tr>
+    <tr><td>Memory</td><td>8 GB minimum. Macs with more than 16 GB get the larger Max cleanup model; the app will not load its models below 8 GB.</td></tr>
     <tr><td>Disk</td><td>About 6 GB free for the models the app downloads on first start</td></tr>
   </table>
 
@@ -89,12 +89,12 @@ shasum -a 256 -c BellowFlow-1.0.0-rc.4-macOS-arm64.dmg.sha256</code><button clas
   </ul>
 
   <h2>Uninstall</h2>
-  <p>Quit BellowFlow, drag it from Applications to the Trash, and delete <code>~/Library/Application Support/BellowFlow</code> to remove the models.</p>
+  <p>Quit Bellow, drag it from Applications to the Trash, and delete <code>~/Library/Application Support/Bellow</code> to remove the models.</p>
 
   <h2>Open source</h2>
-  <p>BellowFlow's code is <a href="https://github.com/xuancongwen/bellowflow/blob/master/LICENSE">MIT licensed</a> and built on other open projects, all under permissive licenses: <a href="https://github.com/peteonrails/voxtype">VoxType</a> (MIT), <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> (MIT) with OpenAI's Whisper large-v3-turbo weights (MIT), <a href="https://github.com/ollama/ollama">Ollama</a> (MIT), and Qwen2.5-7B-Instruct (Apache 2.0). The full list with copyright holders is in <a href="https://github.com/xuancongwen/bellowflow/blob/master/THIRD-PARTY-NOTICES.md">THIRD-PARTY-NOTICES.md</a>, and the app carries every license text inside its bundle. Bugs and ideas go to the <a href="https://github.com/xuancongwen/bellowflow/issues">issue tracker</a>.</p>
+  <p>Bellow's code is <a href="https://github.com/xuancongwen/bellow/blob/master/LICENSE">MIT licensed</a> and built on other open projects, all under permissive licenses: <a href="https://github.com/peteonrails/voxtype">VoxType</a> (MIT), <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> (MIT) with OpenAI's Whisper large-v3-turbo weights (MIT), <a href="https://github.com/ollama/ollama">Ollama</a> (MIT), and Qwen2.5-7B-Instruct (Apache 2.0). The full list with copyright holders is in <a href="https://github.com/xuancongwen/bellow/blob/master/THIRD-PARTY-NOTICES.md">THIRD-PARTY-NOTICES.md</a>, and the app carries every license text inside its bundle. Bugs and ideas go to the <a href="https://github.com/xuancongwen/bellow/issues">issue tracker</a>.</p>
 
-  <footer>BellowFlow · <a href="https://github.com/xuancongwen/bellowflow">GitHub</a> · <a href="https://github.com/xuancongwen/bellowflow/releases">Releases</a></footer>
+  <footer>Bellow · <a href="https://github.com/xuancongwen/bellow">GitHub</a> · <a href="https://github.com/xuancongwen/bellow/releases">Releases</a></footer>
 </main>
 <script>
   document.querySelectorAll('button.copy').forEach(function (b) {
@@ -103,19 +103,19 @@ shasum -a 256 -c BellowFlow-1.0.0-rc.4-macOS-arm64.dmg.sha256</code><button clas
       navigator.clipboard.writeText(text).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });
     });
   });
-  fetch('https://api.github.com/repos/xuancongwen/bellowflow/releases?per_page=1')
+  fetch('https://api.github.com/repos/xuancongwen/bellow/releases?per_page=1')
     .then(function (r) { return r.ok ? r.json() : []; })
     .then(function (list) {
       if (!list.length) return;
       var rel = list[0], el = document.getElementById('version');
       el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
       var m = /^v(.+)$/.exec(rel.tag_name);
-      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.4').join(m[1]);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.5').join(m[1]);
       var dmg = (rel.assets || []).filter(function (a) { return /\.dmg$/.test(a.name); })[0];
       if (dmg) {
         var b = document.getElementById('download');
         b.href = dmg.browser_download_url;
-        b.textContent = 'Download BellowFlow ' + rel.tag_name + ' for Apple Silicon (' + Math.round(dmg.size / 1e6) + ' MB)';
+        b.textContent = 'Download Bellow ' + rel.tag_name + ' for Apple Silicon (' + Math.round(dmg.size / 1e6) + ' MB)';
       }
     }).catch(function () {});
 </script>

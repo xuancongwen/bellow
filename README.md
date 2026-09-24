@@ -1,32 +1,35 @@
-# BellowFlow
+# Bellow
 
 A native macOS menu-bar dictation app. Press **Control + Option + X**, speak,
 press it again, and the cleaned-up English text is typed into whatever app has
 focus. Everything runs on your Mac: it bundles [VoxType](https://github.com/peteonrails/voxtype)
 and a private [Ollama](https://github.com/ollama/ollama) server, and on first
-start downloads Whisper large-v3-turbo and Qwen 2.5 7B with Sam Wen's
-[cleanup Modelfile](https://github.com/xuancongwen/voxtype-llm-wrapper).
+start downloads Whisper large-v3-turbo and a Qwen3.5 cleanup model sized to
+the Mac's memory, with Sam Wen's
+[cleanup Modelfiles](https://github.com/xuancongwen/voxtype-llm-wrapper).
 MIT-licensed application code. Apple Silicon, macOS 13 or newer. Formerly
 known as VoxBundle.
 
-**Status: 1.0.0-rc.4 — builds, packages, and dictates end to end on an
-Apple Silicon Mac; not yet Developer ID signed or notarized.** See
+**Status: 1.0.0-rc.5 — builds, packages, and dictates end to end on an
+Apple Silicon Mac with either cleanup model; not yet Developer ID signed or
+notarized, and the 8 GB and 16 GB tiers are not yet measured on real Macs.** See
 [Validation status](#validation-status) for exactly what has and has not been
 checked.
 
 ## Install
 
-Website: **<https://xuancongwen.github.io/bellowflow/>**
+Website: **<https://xuancongwen.github.io/bellow/>**
 
-The app is an 18 MB download; it fetches its models (about 5.3 GB) on first
-start.
+The app is a 24 MB download (51 MB installed, most of it the Ollama engine);
+it fetches its models on first start: 0.6 GB for speech plus 2.7 GB (Max) or
+1.3 GB (Standard) for cleanup.
 
-1. Download `BellowFlow-<version>-macOS-arm64.dmg` from the
-   [latest release](https://github.com/xuancongwen/bellowflow/releases).
-2. Open it and drag **BellowFlow** to **Applications**.
+1. Download `Bellow-<version>-macOS-arm64.dmg` from the
+   [latest release](https://github.com/xuancongwen/bellow/releases).
+2. Open it and drag **Bellow** to **Applications**.
 3. The first launch is blocked, because release candidates are not yet
    notarized by Apple. Open **System Settings → Privacy & Security**, scroll
-   to the message about BellowFlow, click **Open Anyway**, and confirm. This
+   to the message about Bellow, click **Open Anyway**, and confirm. This
    is a one-time step. (Right-click → Open no longer works for unsigned apps
    on macOS 15 and later.)
 4. In the setup window, allow **Microphone** and **Accessibility** and click
@@ -38,16 +41,17 @@ Prefer the terminal? This does steps 1 to 3 for you, including checksum
 verification and the Gatekeeper exception:
 
 ```sh
-curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
+curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash
 ```
 
 The script is [`scripts/install.sh`](scripts/install.sh);
-`BELLOWFLOW_VERSION=v1.0.0-rc.4` pins a release. To verify a manual download,
+`BELLOW_VERSION=v1.0.0-rc.5` pins a release. To verify a manual download,
 fetch the `.sha256` file next to the DMG and run `shasum -a 256 -c` on it.
 A Homebrew cask is drafted (see [Homebrew](#homebrew)).
 
 Dictate: press ⌃⌥X, speak, press it again. A small overlay shows
-listening, transcribing, and cleaning up. Do not switch windows while it is
+listening (with a live microphone level, so you can see your voice is being
+picked up), transcribing, and cleaning up. Do not switch windows while it is
 typing. Quit from the menu bar to release the models.
 
 To use a different shortcut, open **Setup and status…** from the menu bar,
@@ -68,39 +72,81 @@ Measured with the shipped binaries and settings (`docs/memory-profile.md`):
 | --- | --- |
 | Chip | Apple Silicon (Metal). Intel is not supported. |
 | macOS | 13 Ventura or newer |
-| Memory | **16 GB minimum, 24 GB recommended.** Ollama needs 5.1 GiB for Qwen (4.1 GiB weights, file-backed, plus KV cache and compute buffers); Whisper holds 0.64 GB and peaks at 0.86 GB. Combined working set ≈ 5.4 GB resident, ≈ 5.7 GB during a dictation. |
-| Disk | About 6 GB: the app plus the downloaded models (5.3 GB) |
+| Memory | **8 GB minimum; more than 16 GB gets the Max model.** With the app's Ollama settings the cleanup runner is 3.1 GB resident for Max (Qwen3.5 4B) and 1.5 GB for Standard (Qwen3.5 2B); Whisper holds 0.64 GB and peaks at 0.86 GB. The rc.4 figures for Qwen 2.5 7B are in `docs/memory-profile.md`. |
+| Disk | About 3.4 GB (Max) or 2 GB (Standard): the app plus the downloaded models; the weights are hard-linked into the Ollama store, not copied |
 
-The app refuses to load models on Macs with less than 16 GB, and requires about
-9 GiB of reclaimable memory at start (a 7 GiB working-set allowance plus 2 GiB
-reserve), which leaves roughly 1.3 GiB of margin over the measured peak. This
-is an admission policy, not an enforceable cap: macOS can still compress or
-page model memory under pressure, and nothing is `mlock`ed. Memory-pressure
-warnings pause new recordings (finishing or cancelling the current one still
-works); models are never silently unloaded. An 8 GB edition would need a
-smaller cleanup model and its own quality and memory tests; the app does not
-substitute one.
+The app reads the Mac's physical memory at launch and sorts it into one of
+two tiers pinned in `Resources/models.json`; the tier picks the cleanup
+model. The chip is logged but not used: on Apple Silicon every generation
+shares the same unified-memory rules (macOS lets the GPU wire about two thirds
+of RAM up to 36 GB, three quarters above), so the chip changes speed, not
+whether a model fits.
+
+| Tier | Memory | Cleanup model |
+| --- | --- | --- |
+| max | more than 16 GB (18 GB and up) | Qwen3.5 4B, needs 16 GB |
+| standard | 16 GB and below | Qwen3.5 2B, needs 8 GB |
+
+A tier without a pinned model would be served by the next larger tier's
+model when the Mac meets that model's floor (`needsGiB`); with both tiers
+pinned this only matters for future editions. Each pinned model carries its own
+admission estimate: Max requires 7 GiB of reclaimable memory at start (a
+5 GiB working-set allowance plus 2 GiB reserve) and Standard 4.5 GiB (3.5 plus
+1), against measured resident sizes of about 4 GB and 2.4 GB including
+Whisper. This is an admission policy,
+not an enforceable cap: macOS can still compress or page model memory under
+pressure, and nothing is `mlock`ed. Memory-pressure warnings pause new
+recordings (finishing or cancelling the current one still works); models are
+never silently unloaded.
+
+In the app the tiers appear as **Max** and **Standard**. The
+setup window shows the model in use and a **Change…** button; the sheet
+behind it explains each choice in plain language, greys out the ones this Mac
+cannot run (too little memory, or not included in this version yet), and
+defaults to **Automatic**. Choosing a model saves the choice, downloads that
+model once, and restarts dictation. Status lines say "Downloading the Max
+model" rather than naming files.
+
+`Bellow.app/Contents/MacOS/Bellow --hardware` prints the chip, memory,
+tier, choice, model, and admission verdict. `BELLOW_MEMORY_GIB=8` makes
+the app pretend it has that much RAM, and `BELLOW_TIER=standard` (or `auto`)
+overrides the saved choice, to exercise the other tiers on a larger Mac.
+Whisper is shared by every tier.
 
 ## Models and settings
 
 Models are not in the app. On first start it downloads exactly the ones pinned
 in [`Resources/models.json`](Resources/models.json): Whisper from Hugging Face,
-verified against its SHA-256, and the base Qwen model through the bundled
-Ollama from the Ollama registry, whose pulled manifest must list exactly the
-pinned blob digests (otherwise the app refuses it and asks for an update).
-Both live in `~/Library/Application Support/BellowFlow/`; downloads resume
+verified against its SHA-256, and the base model for this Mac's tier through
+the bundled Ollama from the Ollama registry, whose pulled manifest must list
+exactly the pinned blob digests (otherwise the app refuses it and asks for an
+update). Both live in `~/Library/Application Support/Bellow/`; downloads resume
 if interrupted, and later starts only check that the files are in place.
-`./scripts/pin-models.py <ollama-store> <whisper.bin>` regenerates the pins.
+`./scripts/pin-models.py <tier> <weights.gguf> <whisper.bin>` regenerates the
+pins for one tier from the downloaded files, taking the URL and expected
+checksum from the tier's Modelfile.
 
 - **Whisper large-v3-turbo Q5_0** (574 MB), English forced, translation off,
   Metal with whisper.cpp flash attention, kept loaded, never evicted.
-- **Qwen 2.5 7B** from the `qwen2.5:7b` tag, imported with the exact Modelfile
-  from `voxtype-llm-wrapper` at commit `27feaad731a3d9492dd1f31bb3d19a79cfc523ad`
-  (byte-for-byte; the app re-imports it whenever the bundled Modelfile
-  changes). Temperature 0, context 4096, output capped at 2048 tokens.
-  Truncated, malformed, failed, or empty results fall back to the raw
-  transcript. Measured cleanup latency on an M1 Max: 0.4–0.5 s for a
-  sentence, about 4 s for 300 words.
+- **Max: Qwen3.5 4B** and **Standard: Qwen3.5 2B**, both Unsloth's
+  text-only Q4_K_M GGUF conversions from Hugging Face (the Ollama library
+  builds bundle a vision tower that costs 1.3 to 2 GB of memory and does
+  nothing for dictation). The GGUF is downloaded and checksummed like Whisper,
+  hard-linked into the private Ollama store under its digest, and the wrapper
+  is built from `Modelfile.max` or `Modelfile.standard` with only the FROM
+  line pointed at that file. Both Modelfiles are byte-for-byte the ones in
+  `voxtype-llm-wrapper` at commit `7528c16`, which renders one shared system
+  prompt and example set onto each base model; the app rebuilds a wrapper
+  whenever its Modelfile or weights change. Temperature 0, context 4096,
+  output capped at 2048 tokens, and every request sets `think: false`: Ollama
+  applies the GGUF's own chat template (thinking on) rather than the
+  Modelfile's, and without that flag the model reasons for 2048 tokens and
+  returns nothing. Truncated, malformed, failed, or empty results fall back to
+  the raw transcript. On upstream's 57 scored test cases, sent exactly as the
+  app sends them, Max passes 50 with 5 near misses (punctuation only) and 2
+  failures; Standard passes 44 with 3 near misses and 10 failures, mostly
+  unresolved self-corrections. Measured on an M1 Max: about 0.5 s per
+  sentence for Max, 0.2 s for Standard.
 - Ollama runs only on `127.0.0.1:11439` with `keep_alive=-1`, one loaded model,
   one parallel request, flash attention, a Q8 KV cache, and startup pruning
   disabled. If something already listens on that port, start fails rather than
@@ -121,13 +167,13 @@ models; nothing else ever leaves the machine.
 
 ## Configuration
 
-Everything lives in `~/Library/Application Support/BellowFlow/`: `config.toml`
+Everything lives in `~/Library/Application Support/Bellow/`: `config.toml`
 (VoxType's configuration, generated once and then preserved), `engine.log`,
 `models-v1` (the Ollama store), and `run` (runtime state). Use the setup
 window's "Open configuration and diagnostic log" button, then quit and restart
 to apply edits. VoxType is started with `--config`, which replaces rather than
 merges `~/.config/voxtype`, so an existing VoxType installation is untouched.
-Do not enable VoxType's own hotkey or OSD in this managed configuration.
+Do not enable VoxType's own hotkey or OSD in this managed configuration. A directory left by the app's old name, `BellowFlow`, is moved to `Bellow` on first start so the models are not downloaded again.
 
 The generated defaults, each verified against the pinned VoxType source
 (unknown keys are silently ignored upstream, so `tests/test_config_template.py`
@@ -136,8 +182,8 @@ pins them):
 | Section | Setting | Why |
 | --- | --- | --- |
 | top level | `engine = "whisper"`, `state_file = "auto"` | Explicit engine; state file under the private runtime directory the app watches. |
-| `[hotkey]` | `enabled = false` | BellowFlow registers the shortcut itself via Carbon (⌃⌥X by default, changeable in the setup window), so no Input Monitoring is needed. |
-| `[osd]` | `enabled = false` | BellowFlow draws its own overlay. |
+| `[hotkey]` | `enabled = false` | Bellow registers the shortcut itself via Carbon (⌃⌥X by default, changeable in the setup window), so no Input Monitoring is needed. |
+| `[osd]` | `enabled = false` | Bellow draws its own overlay. |
 | `[audio]` | `device = "default"`, `sample_rate = 16000`, `max_duration_secs = 120` | Safety cap; the recording is transcribed at the limit. |
 | `[whisper]` | `mode = "local"`, absolute model path, `language = "en"`, `translate = false`, `flash_attention = true` | Bundled model only, English forced, flash attention on Metal. |
 | `[whisper]` | `on_demand_loading = false`, `gpu_isolation = false`, `max_loaded_models = 1`, `cold_model_timeout_secs = 0` | Whisper stays loaded until quit. |
@@ -150,7 +196,7 @@ off, no audio feedback).
 
 ## Architecture
 
-The AppKit/SwiftUI shell (`Sources/BellowFlow`) owns a private VoxType daemon and
+The AppKit/SwiftUI shell (`Sources/Bellow`) owns a private VoxType daemon and
 a bundled Ollama process, both terminated on quit. It registers the global
 shortcut with Carbon, drives VoxType through `voxtype record toggle|cancel`,
 watches VoxType's state file to draw a nonactivating overlay, and monitors
@@ -158,14 +204,15 @@ memory pressure. `Sources/VoxClean` is the post-processing helper. The setup
 window floats above other windows until the app is ready, so it stays
 reachable while permissions are being granted in System Settings.
 
-`Sources/BellowFlow/Models.swift` downloads and verifies the models;
-`BellowFlow --prepare-models` runs that step headless (with
-`BELLOWFLOW_SUPPORT=<dir>` to relocate the data directory), which is how the
+`Sources/Bellow/Models.swift` downloads and verifies the models;
+`Bellow --prepare-models` runs that step headless (with
+`BELLOW_SUPPORT=<dir>` to relocate the data directory), which is how the
 download path is tested without the UI.
 
 Pinned upstreams: VoxType `320a737e5d3c8662e0ec7de95f75407baa784d82`, Ollama
-`v0.11.10` (archive verified by SHA-256), and the model checksums and blob
-digests in `Resources/models.json`.
+`v0.34.4` (archive verified by SHA-256; Qwen3.5 needs a 2026 llama.cpp, so
+the rc.4 pin of 0.11.10 cannot load these models), and the model checksums
+in `Resources/models.json`.
 
 ## Build
 
@@ -183,11 +230,11 @@ the tests, verifies the Ollama download hash, thins the universal Ollama binary
 to arm64 (dropping its x86_64-only CPU backends), audits linked libraries and
 the model spec, renders the app icon (`scripts/make-icon.swift`), stamps the
 version from `VERSION`, signs nested code, verifies the signature, and writes
-an 18 MB DMG:
+the DMG:
 
 ```
-dist/BellowFlow-<VERSION>-macOS-arm64.dmg
-dist/BellowFlow-<VERSION>-macOS-arm64.dmg.sha256
+dist/Bellow-<VERSION>-macOS-arm64.dmg
+dist/Bellow-<VERSION>-macOS-arm64.dmg.sha256
 ```
 
 Downloads and the VoxType checkout are cached in `.cache/`; a rebuild with a
@@ -218,8 +265,8 @@ these one-time steps are done:
 Build on your Mac:
 
 ```sh
-xcrun notarytool store-credentials bellowflow --apple-id you@example.com --team-id TEAMID --password xxxx-xxxx-xxxx-xxxx
-SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' NOTARY_PROFILE=bellowflow ./scripts/build-macos.sh
+xcrun notarytool store-credentials bellow --apple-id you@example.com --team-id TEAMID --password xxxx-xxxx-xxxx-xxxx
+SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' NOTARY_PROFILE=bellow ./scripts/build-macos.sh
 ```
 
 Build in CI: export the certificate from Keychain Access as a `.p12` with a
@@ -239,12 +286,12 @@ first signed build.
 
 ## Releases
 
-`VERSION` is the single source of truth (`1.0.0-rc.4`): its numeric part
+`VERSION` is the single source of truth (`1.0.0-rc.5`): its numeric part
 becomes `CFBundleShortVersionString`, the full label names the DMG, and the git
 tag is `v<VERSION>`.
 
 ```sh
-git tag v1.0.0-rc.4 && git push origin master v1.0.0-rc.4
+git tag v1.0.0-rc.5 && git push origin master v1.0.0-rc.5
 ```
 
 `.github/workflows/macos.yml` builds Swift and runs the tests on every push and
@@ -254,19 +301,19 @@ artifact, and on tags publishes a **pre-release** with the DMG and its
 `.sha256`. No Apple signing secrets are assumed.
 
 `.github/workflows/pages.yml` publishes `site/` and `scripts/install.sh` to
-<https://xuancongwen.github.io/bellowflow/> on every push to `master` that
+<https://xuancongwen.github.io/bellow/> on every push to `master` that
 touches them. One-time setup: repository **Settings → Pages → Source: GitHub
 Actions**.
 
 ## Homebrew
 
-A cask is drafted in [`packaging/homebrew/bellowflow.rb`](packaging/homebrew/bellowflow.rb);
+A cask is drafted in [`packaging/homebrew/bellow.rb`](packaging/homebrew/bellow.rb);
 it downloads the DMG straight from the GitHub release.
 
-1. Create a public repository named `homebrew-bellowflow` and copy the cask to
-   `Casks/bellowflow.rb` with the `sha256` from the release's `.sha256` file.
+1. Create a public repository named `homebrew-bellow` and copy the cask to
+   `Casks/bellow.rb` with the `sha256` from the release's `.sha256` file.
 2. Users install with
-   `brew install --cask xuancongwen/bellowflow/bellowflow`. Check the cask
+   `brew install --cask xuancongwen/bellow/bellow`. Check the cask
    with `brew audit --cask --online` and `brew style --cask` first.
 3. Bump `version`, `url`, and `sha256` per release (`brew bump-cask-pr`, or a
    step in the release workflow).
@@ -316,7 +363,7 @@ non-commercial is involved.
 
 | Component | License |
 | --- | --- |
-| BellowFlow source, including the cleanup Modelfile (by BellowFlow's author) | MIT |
+| Bellow source, including the cleanup Modelfile (by Bellow's author) | MIT |
 | VoxType, whisper.cpp/ggml, Ollama, Whisper large-v3-turbo weights | MIT |
 | Rust crates compiled into VoxType (listed in `docs/voxtype-crates.txt`) | MIT, Apache-2.0, BSD, ISC, Zlib, Unicode-3.0, Unlicense, CC0, CDLA-Permissive, BSL-1.0; one MPL-2.0 crate used unmodified |
 | Qwen2.5-7B-Instruct | Apache-2.0 |

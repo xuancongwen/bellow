@@ -9,7 +9,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 def template():
-    source = (ROOT / 'Sources/BellowFlow/main.swift').read_text()
+    source = (ROOT / 'Sources/Bellow/main.swift').read_text()
     match = re.search(r'func initialConfig\(\) -> String \{.*?"""\n(.*?)\n\s*"""', source, re.S)
     def placeholder(interpolation):
         # Mirror the shape of each Swift interpolation without evaluating it.
@@ -22,7 +22,7 @@ class ConfigTemplateTests(unittest.TestCase):
         config = template()
         self.assertEqual(config['engine'], 'whisper')
         self.assertEqual(config['state_file'], 'auto')
-        # BellowFlow owns the shortcut and overlay; upstream defaults would enable both.
+        # Bellow owns the shortcut and overlay; upstream defaults would enable both.
         self.assertFalse(config['hotkey']['enabled'])
         self.assertFalse(config['osd']['enabled'])
         # Whisper stays resident for the whole session.
