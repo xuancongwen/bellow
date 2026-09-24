@@ -2,13 +2,17 @@
 // laid out on Apple's 1024-point icon grid. Writes an .iconset directory; the build turns it
 // into AppIcon.icns with iconutil.
 //   swift scripts/make-icon.swift Resources/AppIcon.iconset
+// With --favicon it writes the site's favicons instead: the tile fills the whole canvas
+// (no grid margin or drop shadow), which is how browser tabs and home screens expect it.
+//   swift scripts/make-icon.swift site --favicon
 import AppKit
 
 let output = URL(fileURLWithPath: CommandLine.arguments[1])
-try? FileManager.default.removeItem(at: output)
+let favicon = CommandLine.arguments.contains("--favicon")
+if !favicon { try? FileManager.default.removeItem(at: output) }
 try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
 
-func render(_ canvas: CGFloat) -> NSBitmapImageRep {
+func render(_ canvas: CGFloat, tight: Bool = false) -> NSBitmapImageRep {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(canvas), pixelsHigh: Int(canvas), bitsPerSample: 8,
                                samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
     NSGraphicsContext.saveGraphicsState()
@@ -16,13 +20,13 @@ func render(_ canvas: CGFloat) -> NSBitmapImageRep {
     let context = NSGraphicsContext.current!.cgContext
     context.clear(CGRect(x: 0, y: 0, width: canvas, height: canvas))
     // Apple's macOS icon grid: the tile fills 824/1024 of the canvas with ~22.5% corner radius.
-    let inset = canvas * 100 / 1024
+    let inset = tight ? 0 : canvas * 100 / 1024
     let tile = CGRect(x: inset, y: inset, width: canvas - 2 * inset, height: canvas - 2 * inset)
     let radius = tile.width * 0.225
     let path = CGPath(roundedRect: tile, cornerWidth: radius, cornerHeight: radius, transform: nil)
-    // Soft shadow under the tile, as the system icons have.
+    // Soft shadow under the tile, as the system icons have (not for favicons, which have no margin).
     context.saveGState()
-    context.setShadow(offset: CGSize(width: 0, height: -canvas * 0.01), blur: canvas * 0.03, color: NSColor.black.withAlphaComponent(0.3).cgColor)
+    if !tight { context.setShadow(offset: CGSize(width: 0, height: -canvas * 0.01), blur: canvas * 0.03, color: NSColor.black.withAlphaComponent(0.3).cgColor) }
     context.addPath(path); context.setFillColor(NSColor(red: 0.71, green: 0.28, blue: 0.12, alpha: 1).cgColor); context.fillPath()
     context.restoreGState()
     context.saveGState()
@@ -51,6 +55,12 @@ func render(_ canvas: CGFloat) -> NSBitmapImageRep {
     return rep
 }
 
+if favicon {
+    for (name, size) in [("favicon-32.png", 32), ("favicon-192.png", 192), ("apple-touch-icon.png", 180), ("favicon-512.png", 512)] {
+        try render(CGFloat(size), tight: true).representation(using: .png, properties: [:])!.write(to: output.appendingPathComponent(name))
+    }
+    print("Wrote favicons to \(output.path)"); exit(0)
+}
 for (points, scale) in [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1), (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)] {
     let rep = render(CGFloat(points * scale))
     let name = scale == 1 ? "icon_\(points)x\(points).png" : "icon_\(points)x\(points)@2x.png"
