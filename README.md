@@ -9,7 +9,7 @@ start downloads Whisper large-v3-turbo and Qwen 2.5 7B with Sam Wen's
 MIT-licensed application code. Apple Silicon, macOS 13 or newer. Formerly
 known as VoxBundle.
 
-**Status: 1.0.0-rc.3 — builds, packages, and dictates end to end on an
+**Status: 1.0.0-rc.4 — builds, packages, and dictates end to end on an
 Apple Silicon Mac; not yet Developer ID signed or notarized.** See
 [Validation status](#validation-status) for exactly what has and has not been
 checked.
@@ -24,9 +24,11 @@ start.
 1. Download `BellowFlow-<version>-macOS-arm64.dmg` from the
    [latest release](https://github.com/xuancongwen/bellowflow/releases).
 2. Open it and drag **BellowFlow** to **Applications**.
-3. **Right-click BellowFlow → Open** the first time. Release candidates are
-   not yet notarized, so plain double-click shows an "unidentified developer"
-   warning.
+3. The first launch is blocked, because release candidates are not yet
+   notarized by Apple. Open **System Settings → Privacy & Security**, scroll
+   to the message about BellowFlow, click **Open Anyway**, and confirm. This
+   is a one-time step. (Right-click → Open no longer works for unsigned apps
+   on macOS 15 and later.)
 4. In the setup window, allow **Microphone** and **Accessibility** and click
    **Start**. The first start downloads the models (resumes if interrupted);
    the status reads **Ready · ⌃⌥X to dictate** when done. Later launches
@@ -40,7 +42,7 @@ curl -fsSL https://xuancongwen.github.io/bellowflow/install.sh | bash
 ```
 
 The script is [`scripts/install.sh`](scripts/install.sh);
-`BELLOWFLOW_VERSION=v1.0.0-rc.3` pins a release. To verify a manual download,
+`BELLOWFLOW_VERSION=v1.0.0-rc.4` pins a release. To verify a manual download,
 fetch the `.sha256` file next to the DMG and run `shasum -a 256 -c` on it.
 A Homebrew cask is drafted (see [Homebrew](#homebrew)).
 
@@ -198,8 +200,8 @@ backend needs it on current Xcode.
 ### Signing and notarization
 
 Without a certificate the build is ad-hoc signed: fine for development, but
-Gatekeeper requires right-click → Open and each rebuild can invalidate earlier
-permission grants. A public release should be Developer ID signed and
+Gatekeeper blocks the first launch until the user allows it in Privacy &
+Security, and each rebuild can invalidate earlier permission grants. A public release should be Developer ID signed and
 notarized, which the build script and the release workflow both support once
 these one-time steps are done:
 
@@ -237,12 +239,12 @@ first signed build.
 
 ## Releases
 
-`VERSION` is the single source of truth (`1.0.0-rc.3`): its numeric part
+`VERSION` is the single source of truth (`1.0.0-rc.4`): its numeric part
 becomes `CFBundleShortVersionString`, the full label names the DMG, and the git
 tag is `v<VERSION>`.
 
 ```sh
-git tag v1.0.0-rc.3 && git push origin master v1.0.0-rc.3
+git tag v1.0.0-rc.4 && git push origin master v1.0.0-rc.4
 ```
 
 `.github/workflows/macos.yml` builds Swift and runs the tests on every push and

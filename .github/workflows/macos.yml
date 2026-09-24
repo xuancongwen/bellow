@@ -69,7 +69,7 @@ jobs:
         run: |
           cd dist
           DMG=$(ls BellowFlow-*-macOS-arm64.dmg)
-          if [[ -n "${SIGNING_IDENTITY:-}" ]]; then SIGNED="Developer ID signed and notarized."; OPEN="double-click BellowFlow"; else SIGNED="Unsigned development build (ad-hoc signature)."; OPEN="right-click → Open the first time (Gatekeeper)"; fi
+          if [[ -n "${SIGNING_IDENTITY:-}" ]]; then SIGNED="Developer ID signed and notarized."; OPEN="double-click BellowFlow"; else SIGNED="Unsigned development build (ad-hoc signature)."; OPEN="when the first launch is blocked, allow it once in System Settings → Privacy & Security → Open Anyway"; fi
           cat > notes.md <<EOF
           $SIGNED Apple Silicon, macOS 13+, 16 GB RAM minimum.
 

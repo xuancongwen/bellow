@@ -7,7 +7,7 @@
 # 2 GB asset cap), verifies the SHA-256, copies BellowFlow.app to /Applications,
 # clears the quarantine flag (release candidates are ad-hoc signed, not notarized),
 # and opens the app. The app itself downloads its models on first start. Set
-# BELLOWFLOW_VERSION=v1.0.0-rc.3 to pin a release; the default is the newest
+# BELLOWFLOW_VERSION=v1.0.0-rc.4 to pin a release; the default is the newest
 # release, pre-releases included. Downloads go to ~/Library/Caches/BellowFlow-installer
 # and resume if the script is rerun.
 set -euo pipefail
@@ -91,8 +91,8 @@ rm -rf "${DEST}/BellowFlow.app"
 ditto "$app" "${DEST}/BellowFlow.app"
 hdiutil detach "$mount" -quiet
 trap - EXIT
-# A notarized build passes Gatekeeper as is. An ad-hoc signed release candidate would need
-# right-click -> Open, so clear its quarantine flag instead.
+# A notarized build passes Gatekeeper as is. An ad-hoc signed release candidate would be
+# blocked until allowed in System Settings > Privacy & Security, so clear its quarantine flag.
 if spctl --assess --type execute "${DEST}/BellowFlow.app" >/dev/null 2>&1; then
   say "Notarized by Apple; Gatekeeper accepts it"
 else
