@@ -100,7 +100,6 @@ codesign --verify --deep --strict --verbose=2 "$APP"
 notarize() {
   if [[ -n "${NOTARY_PROFILE:-}" ]]; then xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait
   else xcrun notarytool submit "$1" --apple-id "$NOTARY_APPLE_ID" --team-id "$NOTARY_TEAM_ID" --password "$NOTARY_PASSWORD" --wait; fi
-  xcrun stapler staple "$1"
 }
 NOTARIZE=0
 if [[ -n "${NOTARY_PROFILE:-}" || -n "${NOTARY_APPLE_ID:-}" ]]; then
@@ -123,6 +122,8 @@ rm -rf "$STAGE"
 if [[ "$NOTARIZE" == 1 ]]; then
   if [[ "$IDENTITY" != "-" ]]; then codesign --force --sign "$IDENTITY" "$DMG"; fi
   notarize "$DMG"
+  xcrun stapler staple "$DMG"
+  spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 fi
 (cd "$ROOT/dist" && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
 echo "Built: $DMG ($SHORT_VERSION build $BUILD_NUMBER)"
