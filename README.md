@@ -238,7 +238,21 @@ dist/Bellow-<VERSION>-macOS-arm64.dmg.sha256
 ```
 
 Downloads and the VoxType checkout are cached in `.cache/`; a rebuild with a
-warm cache takes about two minutes. Two
+warm cache takes about two minutes.
+
+### Checks
+
+`./scripts/check.sh` runs what the CI build job used to run on every push:
+the release build, the Python tests, the Swift tests, and a syntax check of
+the shell scripts, in about 30 seconds with a warm `.build/`. To run it
+automatically before every `git push`, point git at the versioned hooks once
+per clone (`git push --no-verify` skips it for one push):
+
+```sh
+git config core.hooksPath scripts/hooks
+```
+
+Two
 platform quirks are handled in the script: cargo fetches git dependencies with
 the git CLI (SSH agents and `url.<base>.insteadOf` rewrites work), and clang's
 compiler-rt is linked into VoxType because whisper.cpp's Objective-C Metal
@@ -294,11 +308,16 @@ tag is `v<VERSION>`.
 git tag v1.0.0-rc.5 && git push origin master v1.0.0-rc.5
 ```
 
-`.github/workflows/macos.yml` builds Swift and runs the tests on every push and
-pull request. On a `v*` tag (or a manual run with `bundle` enabled) it builds
-the DMG on a GitHub-hosted Apple Silicon runner, keeps it as a workflow
-artifact, and on tags publishes a **pre-release** with the DMG and its
-`.sha256`. No Apple signing secrets are assumed.
+`.github/workflows/macos.yml` does not run on ordinary pushes: macOS runners
+are billed at ten times the Linux rate, so the build and tests run locally
+instead (see [Checks](#checks)). It builds Swift and runs the tests on pull
+requests and manual runs, and on a `v*` tag (or a manual run with `bundle`
+enabled) it builds the DMG on a GitHub-hosted Apple Silicon runner, keeps it
+as a workflow artifact, and on tags publishes a **pre-release** with the DMG
+and its `.sha256`. No Apple signing secrets are assumed. The DMG can equally
+be built on a Mac with `./scripts/build-macos.sh` and published with
+`gh release create v<VERSION> --prerelease dist/*.dmg dist/*.sha256`, which
+avoids the 20-minute runner altogether.
 
 `.github/workflows/pages.yml` publishes `site/` and `scripts/install.sh` to
 <https://xuancongwen.github.io/bellow/> on every push to `master` that

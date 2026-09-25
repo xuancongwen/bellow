@@ -1,17 +1,24 @@
 name: macOS
+# macOS runners are the expensive kind, so this does not run on ordinary pushes: the build and
+# tests run locally through scripts/check.sh (wired to `git push` by scripts/hooks/pre-push).
+# GitHub runs them only for pull requests and manual runs, and builds the DMG on v* tags.
 on:
-  push:
-    branches: ['**']
-    tags: ['v*']
   pull_request:
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       bundle:
         description: Also build the DMG (compiles VoxType with Metal; about 20 minutes)
         type: boolean
         default: false
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
+    # Tags skip this: the bundle job's build script already compiles and runs every test.
+    if: "!startsWith(github.ref, 'refs/tags/')"
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
