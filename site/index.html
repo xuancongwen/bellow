@@ -60,18 +60,18 @@
   <p><a class="button" id="download" href="https://github.com/xuancongwen/bellow/releases">Download Bellow for Apple Silicon</a></p>
   <ol class="steps">
     <li>Open the downloaded <code>.dmg</code> and drag <strong>Bellow</strong> into <strong>Applications</strong>.</li>
-    <li>The first launch is blocked, because the app is not yet notarized by Apple. Open <strong>System Settings → Privacy &amp; Security</strong>, scroll down to the message about Bellow, click <strong>Open Anyway</strong>, and confirm. This is a one-time step. (On macOS 15 and later, right-click → Open no longer works for unsigned apps; the terminal install below avoids the step entirely.)</li>
+    <li>Open <strong>Bellow</strong> from Applications. It is signed and notarized by Apple, so it opens without a security warning.</li>
     <li>In the setup window, allow <strong>Microphone</strong> and <strong>Accessibility</strong> when macOS asks, and click <strong>Start</strong>.</li>
     <li>Wait for the status to read <strong>Ready</strong> while the models download. If the download is interrupted, click Start again and it resumes.</li>
     <li>Click into any text field, press <span class="kbd">⌃⌥X</span>, talk, and press it again.</li>
   </ol>
 
   <h2 id="manual">Prefer the terminal?</h2>
-  <p>This one line downloads the app, verifies its checksum, puts it in Applications, clears the Gatekeeper warning, and opens it:</p>
+  <p>This one line downloads the app, verifies its checksum, puts it in Applications, and opens it:</p>
   <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
   <p class="callout">You can <a href="https://github.com/xuancongwen/bellow/blob/master/scripts/install.sh">read the script</a> first. To check a manual download instead, get the <code>.dmg.sha256</code> file next to the DMG on the <a href="https://github.com/xuancongwen/bellow/releases">releases page</a> and run:</p>
   <pre><code id="manual-cmd">cd ~/Downloads
-shasum -a 256 -c Bellow-1.0.0-rc.5-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
+shasum -a 256 -c Bellow-1.0.0-rc.6-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
 
   <h2 id="requirements">Requirements</h2>
   <table>
@@ -110,7 +110,7 @@ shasum -a 256 -c Bellow-1.0.0-rc.5-macOS-arm64.dmg.sha256</code><button class="c
       var rel = list[0], el = document.getElementById('version');
       el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
       var m = /^v(.+)$/.exec(rel.tag_name);
-      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.5').join(m[1]);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.6').join(m[1]);
       var dmg = (rel.assets || []).filter(function (a) { return /\.dmg$/.test(a.name); })[0];
       if (dmg) {
         var b = document.getElementById('download');

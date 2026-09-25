@@ -5,9 +5,9 @@
 #
 # Downloads the release DMG (or its split parts, for releases that exceeded GitHub's
 # 2 GB asset cap), verifies the SHA-256, copies Bellow.app to /Applications,
-# clears the quarantine flag (release candidates are ad-hoc signed, not notarized),
+# clears the quarantine flag if the build is not notarized (releases before 1.0.0-rc.6),
 # and opens the app. The app itself downloads its models on first start. Set
-# BELLOW_VERSION=v1.0.0-rc.5 to pin a release; the default is the newest
+# BELLOW_VERSION=v1.0.0-rc.6 to pin a release; the default is the newest
 # release, pre-releases included. Downloads go to ~/Library/Caches/Bellow-installer
 # and resume if the script is rerun.
 set -euo pipefail

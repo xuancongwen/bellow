@@ -6,8 +6,8 @@
 # is the download. For each release, set version and paste the hash from the
 # release's .sha256 file (`brew bump-cask-pr` can do this too).
 cask "bellow" do
-  version "1.0.0-rc.4"
-  sha256 "02ca842a3d449d8a594a416fc52e25e2129b4b964707fb285a1e71a34cf81ba0"
+  version "1.0.0-rc.6"
+  sha256 "5f6bda2a938d1fbb7652ee14bbb71399178b417eb45a04f5993f3f15067d6daf"
 
   url "https://github.com/xuancongwen/bellow/releases/download/v#{version}/Bellow-#{version}-macOS-arm64.dmg"
   name "Bellow"

@@ -10,9 +10,10 @@ the Mac's memory, with Sam Wen's
 MIT-licensed application code. Apple Silicon, macOS 13 or newer. Formerly
 known as VoxBundle.
 
-**Status: 1.0.0-rc.5 — builds, packages, and dictates end to end on an
-Apple Silicon Mac with either cleanup model; not yet Developer ID signed or
-notarized, and the 8 GB and 16 GB tiers are not yet measured on real Macs.** See
+**Status: 1.0.0-rc.6 — builds, packages, and dictates end to end on an
+Apple Silicon Mac with either cleanup model; Developer ID signed and notarized
+by Apple since rc.6; the 8 GB and 16 GB tiers are not yet measured on real
+Macs.** See
 [Validation status](#validation-status) for exactly what has and has not been
 checked.
 
@@ -27,25 +28,22 @@ it fetches its models on first start: 0.6 GB for speech plus 2.7 GB (Max) or
 1. Download `Bellow-<version>-macOS-arm64.dmg` from the
    [latest release](https://github.com/xuancongwen/bellow/releases).
 2. Open it and drag **Bellow** to **Applications**.
-3. The first launch is blocked, because release candidates are not yet
-   notarized by Apple. Open **System Settings → Privacy & Security**, scroll
-   to the message about Bellow, click **Open Anyway**, and confirm. This
-   is a one-time step. (Right-click → Open no longer works for unsigned apps
-   on macOS 15 and later.)
+3. Open **Bellow** from Applications. The app is Developer ID signed and
+   notarized by Apple, so Gatekeeper opens it without a warning.
 4. In the setup window, allow **Microphone** and **Accessibility** and click
    **Start**. The first start downloads the models (resumes if interrupted);
    the status reads **Ready · ⌃⌥X to dictate** when done. Later launches
    start on their own.
 
 Prefer the terminal? This does steps 1 to 3 for you, including checksum
-verification and the Gatekeeper exception:
+verification:
 
 ```sh
 curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash
 ```
 
 The script is [`scripts/install.sh`](scripts/install.sh);
-`BELLOW_VERSION=v1.0.0-rc.5` pins a release. To verify a manual download,
+`BELLOW_VERSION=v1.0.0-rc.6` pins a release. To verify a manual download,
 fetch the `.sha256` file next to the DMG and run `shasum -a 256 -c` on it.
 A Homebrew cask is drafted (see [Homebrew](#homebrew)).
 
@@ -260,11 +258,12 @@ backend needs it on current Xcode.
 
 ### Signing and notarization
 
-Without a certificate the build is ad-hoc signed: fine for development, but
-Gatekeeper blocks the first launch until the user allows it in Privacy &
-Security, and each rebuild can invalidate earlier permission grants. A public release should be Developer ID signed and
-notarized, which the build script and the release workflow both support once
-these one-time steps are done:
+Releases from 1.0.0-rc.6 on are Developer ID signed and notarized: the app
+and the DMG are both submitted to Apple and stapled, so Gatekeeper opens them
+without a warning. Without a certificate the build is ad-hoc signed: fine for
+development, but Gatekeeper blocks the first launch until the user allows it
+in Privacy & Security, and each rebuild can invalidate earlier permission
+grants. The one-time setup for a Mac that signs releases:
 
 1. Join the [Apple Developer Program](https://developer.apple.com/programs/)
    (US$99 per year; a personal membership is enough).
@@ -300,29 +299,32 @@ first signed build.
 
 ## Releases
 
-`VERSION` is the single source of truth (`1.0.0-rc.5`): its numeric part
+`VERSION` is the single source of truth (`1.0.0-rc.6`): its numeric part
 becomes `CFBundleShortVersionString`, the full label names the DMG, and the git
-tag is `v<VERSION>`.
+tag is `v<VERSION>`. A release is cut on a Mac with the signing certificate
+(see [Signing and notarization](#signing-and-notarization)), then published
+with the `gh` CLI, which creates the tag:
 
 ```sh
-git tag v1.0.0-rc.5 && git push origin master v1.0.0-rc.5
+SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' NOTARY_PROFILE=bellow ./scripts/build-macos.sh
+git push origin master
+gh release create v<VERSION> --prerelease --target master dist/Bellow-<VERSION>-macOS-arm64.dmg dist/Bellow-<VERSION>-macOS-arm64.dmg.sha256
 ```
 
 `.github/workflows/macos.yml` does not run on ordinary pushes: macOS runners
 are billed at ten times the Linux rate, so the build and tests run locally
 instead (see [Checks](#checks)). It builds Swift and runs the tests on pull
 requests and manual runs, and on a `v*` tag (or a manual run with `bundle`
-enabled) it builds the DMG on a GitHub-hosted Apple Silicon runner, keeps it
-as a workflow artifact, and on tags publishes a **pre-release** with the DMG
-and its `.sha256`. No Apple signing secrets are assumed. The DMG can equally
-be built on a Mac with `./scripts/build-macos.sh` and published with
-`gh release create v<VERSION> --prerelease dist/*.dmg dist/*.sha256`, which
-avoids the 20-minute runner altogether.
+enabled) it can build the DMG on a GitHub-hosted Apple Silicon runner and
+publish a pre-release, signed if the five Apple secrets are set. That path is
+a fallback; the local build above is the normal one.
 
-`.github/workflows/pages.yml` publishes `site/` and `scripts/install.sh` to
-<https://xuancongwen.github.io/bellow/> on every push to `master` that
-touches them. One-time setup: repository **Settings → Pages → Source: GitHub
-Actions**.
+The website at <https://xuancongwen.github.io/bellow/> is `site/` plus
+`scripts/install.sh`, served by GitHub Pages from the `gh-pages` branch.
+`./scripts/publish-site.sh` assembles that branch and force-pushes it; run it
+after changing either. It does not use GitHub Actions. One-time setup, already
+done for this repository: **Settings → Pages → Source: Deploy from a branch**,
+branch `gh-pages`, folder `/`.
 
 ## Homebrew
 
@@ -338,9 +340,8 @@ it downloads the DMG straight from the GitHub release.
    step in the release workflow).
 
 Getting into the main `homebrew/cask` tap additionally needs a stable
-(non-pre-release) version, a Developer ID signed and notarized app, and enough
-public use to meet Homebrew's notability rules. Both remain on the
-[validation list](#validation-status).
+(non-pre-release) version and enough public use to meet Homebrew's notability
+rules; the app is already Developer ID signed and notarized.
 
 ## Validation status
 
@@ -350,6 +351,9 @@ Verified on an Apple M1 Max, 64 GB, macOS 26.6, Swift 6.4:
   (model exporter, cleanup helper against an HTTP mock, config template).
 - Bundle built, `otool` audit and strict signature validation passed, DMG
   created; ad-hoc build launched from `dist/`.
+- Developer ID signed with the hardened runtime on every nested binary; the
+  app and the DMG accepted by Apple's notary service and stapled; `spctl`
+  accepts a quarantined copy as "Notarized Developer ID" (rc.6).
 - Model download (`--prepare-models`): Whisper fetched from Hugging Face and
   checksum-verified; the Ollama pull streamed and completed; a model whose
   digests differ from `models.json` is refused; the wrapper is re-created from
@@ -364,8 +368,9 @@ Verified on an Apple M1 Max, 64 GB, macOS 26.6, Swift 6.4:
 
 Still open before a public 1.0:
 
-1. Developer ID signing, notarization, Gatekeeper, and permission persistence
-   across an update.
+1. Microphone and Accessibility grants persisting across an update from one
+   signed build to the next (the ad-hoc to Developer ID switch resets them
+   once).
 2. Memory pressure, swap, and latency on 16 GB and 24 GB Macs.
 3. First launch on a clean account through the setup window (the download
    path has only been exercised headless); sleep/wake, screen changes,
