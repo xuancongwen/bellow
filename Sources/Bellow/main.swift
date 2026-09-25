@@ -77,9 +77,13 @@ func tomlQuote(_ value: String) -> String {
 }
 
 final class Overlay {
+    private static let width: CGFloat = 300
+    private static let oneLine: CGFloat = 52
+    private static let twoLines: CGFloat = 88
     private let label = NSTextField(labelWithString: "")
-    private let meter = LevelView(frame: NSRect(x: 196, y: 14, width: 68, height: 24))
-    private let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 280, height: 52), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+    private let meter = LevelView(frame: NSRect(x: 16, y: 14, width: 268, height: 24))
+    private let visual: NSVisualEffectView
+    private let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: Overlay.width, height: Overlay.oneLine), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
     init() {
         panel.level = .floating
         panel.isOpaque = false
@@ -87,33 +91,42 @@ final class Overlay {
         panel.hasShadow = true
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let visual = NSVisualEffectView(frame: panel.contentView!.bounds)
+        visual = NSVisualEffectView(frame: panel.contentView!.bounds)
+        visual.autoresizingMask = [.width, .height]
         visual.material = .hudWindow
         visual.blendingMode = .behindWindow
         visual.state = .active
         visual.wantsLayer = true
         visual.layer?.cornerRadius = 20
         visual.layer?.masksToBounds = true
-        label.frame = NSRect(x: 16, y: 16, width: 248, height: 22)
         label.font = .systemFont(ofSize: 15, weight: .medium)
         label.alignment = .center
+        label.lineBreakMode = .byTruncatingTail
         visual.addSubview(label)
         meter.isHidden = true
         visual.addSubview(meter)
         panel.contentView = visual
+        layout()
     }
-    /// Live microphone level while recording; nil hides the meter and gives the text the full width.
+    /// One line of text, or the text above a full-width level meter while recording. The panel keeps its
+    /// bottom edge in place and grows upward so the switch does not shift it on screen.
+    private func layout() {
+        let height = meter.isHidden ? Overlay.oneLine : Overlay.twoLines
+        if panel.frame.height != height { panel.setContentSize(NSSize(width: Overlay.width, height: height)) }
+        label.frame = NSRect(x: 16, y: height - 36, width: Overlay.width - 32, height: 22)
+    }
+    /// Live microphone level while recording; nil hides the meter and drops back to a single line.
     func level(_ value: Float?) {
         if let value = value {
-            if meter.isHidden { meter.reset(); meter.isHidden = false; label.frame = NSRect(x: 16, y: 16, width: 176, height: 22) }
+            if meter.isHidden { meter.reset(); meter.isHidden = false; layout() }
             meter.push(value)
-        } else if !meter.isHidden { meter.isHidden = true; label.frame = NSRect(x: 16, y: 16, width: 248, height: 22) }
+        } else if !meter.isHidden { meter.isHidden = true; layout() }
     }
     func show(_ text: String) {
         label.stringValue = text
         let mouse = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
-        if let frame = screen?.visibleFrame { panel.setFrameOrigin(NSPoint(x: frame.midX - 140, y: frame.minY + 65)) }
+        if let frame = screen?.visibleFrame { panel.setFrameOrigin(NSPoint(x: frame.midX - Overlay.width / 2, y: frame.minY + 65)) }
         panel.orderFrontRegardless()
     }
     func hide() { panel.orderOut(nil) }
