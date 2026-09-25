@@ -113,7 +113,13 @@ if [[ -n "${NOTARY_PROFILE:-}" || -n "${NOTARY_APPLE_ID:-}" ]]; then
   spctl --assess --type execute --verbose=2 "$APP"
 fi
 rm -f "$ROOT"/dist/Bellow-*-macOS-arm64.dmg "$ROOT"/dist/Bellow-*-macOS-arm64.dmg.sha256
-hdiutil create -volname "Bellow $RELEASE" -srcfolder "$APP" -ov -format UDZO "$DMG"
+# The DMG holds the app next to an Applications shortcut, so installing is one drag.
+STAGE="$ROOT/dist/dmg"
+rm -rf "$STAGE"; mkdir -p "$STAGE"
+ditto "$APP" "$STAGE/Bellow.app"
+ln -s /Applications "$STAGE/Applications"
+hdiutil create -volname "Bellow $RELEASE" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
+rm -rf "$STAGE"
 if [[ "$NOTARIZE" == 1 ]]; then
   if [[ "$IDENTITY" != "-" ]]; then codesign --force --sign "$IDENTITY" "$DMG"; fi
   notarize "$DMG"

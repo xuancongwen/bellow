@@ -173,7 +173,7 @@ Everything lives in `~/Library/Application Support/Bellow/`: `config.toml`
 window's "Open configuration and diagnostic log" button, then quit and restart
 to apply edits. VoxType is started with `--config`, which replaces rather than
 merges `~/.config/voxtype`, so an existing VoxType installation is untouched.
-Do not enable VoxType's own hotkey or OSD in this managed configuration. A directory left by the app's old name, `BellowFlow`, is moved to `Bellow` on first start so the models are not downloaded again.
+Do not enable VoxType's own hotkey or OSD in this managed configuration. A directory left by the app's old name, `BellowFlow`, is moved to `Bellow` on first start, with the paths inside `config.toml` and the saved shortcut and model choice carried over, so nothing is downloaded or set up again.
 
 The generated defaults, each verified against the pinned VoxType source
 (unknown keys are silently ignored upstream, so `tests/test_config_template.py`

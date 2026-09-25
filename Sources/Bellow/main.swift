@@ -9,17 +9,8 @@ let fm = FileManager.default
 let support = ProcessInfo.processInfo.environment["BELLOW_SUPPORT"].map { URL(fileURLWithPath: $0) }
     ?? fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Bellow")
 let runtime = support.appendingPathComponent("run")
-// One-time move of the data directory written under the app's old name (BellowFlow), so existing
-// installs keep their downloaded models. Skipped while the old app is still running or holds the directory.
-if ProcessInfo.processInfo.environment["BELLOW_SUPPORT"] == nil, !fm.fileExists(atPath: support.path) {
-    let legacy = support.deletingLastPathComponent().appendingPathComponent("BellowFlow")
-    if fm.fileExists(atPath: legacy.path),
-       NSRunningApplication.runningApplications(withBundleIdentifier: "org.bellowflow.app").isEmpty,
-       (try? fm.moveItem(at: legacy, to: support)) != nil {
-        let store = support.appendingPathComponent("models-v1")
-        try? fm.moveItem(at: store.appendingPathComponent(".bellowflow-wrapper"), to: store.appendingPathComponent(".bellow-wrapper"))
-    }
-}
+// Installs made under the app's old name keep their models, configuration, and preferences.
+if ProcessInfo.processInfo.environment["BELLOW_SUPPORT"] == nil { LegacyMigration.run(support: support) }
 let resources = Bundle.main.resourceURL!
 let endpoint = "http://127.0.0.1:11439"
 let spec = try! ModelSpec.load(resources.appendingPathComponent("models.json"))
