@@ -71,7 +71,7 @@
   <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
   <p class="callout">You can <a href="https://github.com/xuancongwen/bellow/blob/master/scripts/install.sh">read the script</a> first. To check a manual download instead, get the <code>.dmg.sha256</code> file next to the DMG on the <a href="https://github.com/xuancongwen/bellow/releases">releases page</a> and run:</p>
   <pre><code id="manual-cmd">cd ~/Downloads
-shasum -a 256 -c Bellow-1.0.0-rc.6-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
+shasum -a 256 -c Bellow-1.0.0-rc.7-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
 
   <h2 id="requirements">Requirements</h2>
   <table>
@@ -110,7 +110,7 @@ shasum -a 256 -c Bellow-1.0.0-rc.6-macOS-arm64.dmg.sha256</code><button class="c
       var rel = list[0], el = document.getElementById('version');
       el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
       var m = /^v(.+)$/.exec(rel.tag_name);
-      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.6').join(m[1]);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.7').join(m[1]);
       var dmg = (rel.assets || []).filter(function (a) { return /\.dmg$/.test(a.name); })[0];
       if (dmg) {
         var b = document.getElementById('download');

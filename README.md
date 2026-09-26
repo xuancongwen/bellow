@@ -10,7 +10,7 @@ the Mac's memory, with Sam Wen's
 MIT-licensed application code. Apple Silicon, macOS 13 or newer. Formerly
 known as VoxBundle.
 
-**Status: 1.0.0-rc.6 — builds, packages, and dictates end to end on an
+**Status: 1.0.0-rc.7 — builds, packages, and dictates end to end on an
 Apple Silicon Mac with either cleanup model; Developer ID signed and notarized
 by Apple since rc.6; the 8 GB and 16 GB tiers are not yet measured on real
 Macs.** See
@@ -43,7 +43,7 @@ curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash
 ```
 
 The script is [`scripts/install.sh`](scripts/install.sh);
-`BELLOW_VERSION=v1.0.0-rc.6` pins a release. To verify a manual download,
+`BELLOW_VERSION=v1.0.0-rc.7` pins a release. To verify a manual download,
 fetch the `.sha256` file next to the DMG and run `shasum -a 256 -c` on it.
 A Homebrew cask is drafted (see [Homebrew](#homebrew)).
 
@@ -299,7 +299,7 @@ first signed build.
 
 ## Releases
 
-`VERSION` is the single source of truth (`1.0.0-rc.6`): its numeric part
+`VERSION` is the single source of truth (`1.0.0-rc.7`): its numeric part
 becomes `CFBundleShortVersionString`, the full label names the DMG, and the git
 tag is `v<VERSION>`. A release is cut on a Mac with the signing certificate
 (see [Signing and notarization](#signing-and-notarization)), then published

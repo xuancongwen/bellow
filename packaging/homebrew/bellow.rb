@@ -6,8 +6,8 @@
 # is the download. For each release, set version and paste the hash from the
 # release's .sha256 file (`brew bump-cask-pr` can do this too).
 cask "bellow" do
-  version "1.0.0-rc.6"
-  sha256 "5f6bda2a938d1fbb7652ee14bbb71399178b417eb45a04f5993f3f15067d6daf"
+  version "1.0.0-rc.7"
+  sha256 "adf680d061d59de99b8b00c63ee96f2aeba2483baa2db632eed55e8e6194912a"
 
   url "https://github.com/xuancongwen/bellow/releases/download/v#{version}/Bellow-#{version}-macOS-arm64.dmg"
   name "Bellow"
@@ -23,11 +23,6 @@ cask "bellow" do
   depends_on macos: ">= :ventura"
 
   app "Bellow.app"
-
-  # Release candidates are ad-hoc signed; drop this once builds are notarized.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/Bellow.app"], sudo: false
-  end
 
   uninstall quit: "org.bellow.app"
 
