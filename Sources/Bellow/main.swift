@@ -44,7 +44,7 @@ func engineEnvironment() -> [String: String] {
 /// `Bellow --prepare-models`: download and prepare the models without the UI, for scripts and tests.
 func prepareModelsHeadless() -> Int32 {
     let ollamaBinary = resources.appendingPathComponent("ollama/ollama")
-    var server: Process?
+    var server: OllamaServer?
     let done = DispatchSemaphore(value: 0)
     var status: Int32 = 0
     var last = ""
@@ -64,7 +64,8 @@ func prepareModelsHeadless() -> Int32 {
             }
             print("Models ready in \(support.path)")
         } catch { FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8)); status = 1 }
-        server?.terminate()
+        // A server adopted from a running Bellow stays up; it is that app's engine.
+        if let server = server, case .spawned = server { models.stopOllama(server) }
         done.signal()
     }
     done.wait()
@@ -173,7 +174,7 @@ final class AppModel: ObservableObject {
         if ready { status = "Ready · \(new.label) to dictate" }
     }
     private var engine: Process?
-    private var ollama: Process?
+    private var ollama: OllamaServer?
     private var timer: Timer?
     private var watcher: DispatchSourceFileSystemObject?
     private var watchFD: Int32 = -1
@@ -412,10 +413,11 @@ final class AppModel: ObservableObject {
         activeTimer?.invalidate(); activeTimer = nil
         watcher?.cancel(); watcher = nil
         meter.stop(); overlay.level(nil); lastState = ""
-        for p in [engine, ollama].compactMap({ $0 }) where p.isRunning {
+        if let p = engine, p.isRunning {
             p.terminate()
             DispatchQueue.global().asyncAfter(deadline: .now() + 3) { if p.isRunning { kill(p.processIdentifier, SIGKILL) } }
         }
+        if let server = ollama { models.stopOllama(server) }
         engine = nil; ollama = nil; overlay.hide()
     }
 }

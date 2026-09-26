@@ -61,6 +61,22 @@ func ollamaResponds(_ endpoint: String, _ path: String) async -> Bool {
     return (response as? HTTPURLResponse)?.statusCode == 200
 }
 
+/// The executable a process is running, or nil once the process is gone.
+func executablePath(of pid: pid_t) -> String? {
+    var buffer = [CChar](repeating: 0, count: Int(4 * MAXPATHLEN))
+    guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { return nil }
+    return String(cString: buffer)
+}
+
+/// The private Ollama server: spawned by this launch, or left running by an earlier launch that
+/// died without stopping it (a crash) and adopted with its model still warm.
+enum OllamaServer {
+    case spawned(Process), adopted(pid_t)
+    var pid: pid_t { switch self { case .spawned(let p): return p.processIdentifier; case .adopted(let pid): return pid } }
+    var isRunning: Bool { switch self { case .spawned(let p): return p.isRunning; case .adopted(let pid): return kill(pid, 0) == 0 } }
+    func terminate() { switch self { case .spawned(let p): p.terminate(); case .adopted(let pid): kill(pid, SIGTERM) } }
+}
+
 /// Fetches, verifies, and prepares the models in Application Support. Nothing here touches the UI;
 /// `report` receives a status line and, while a download runs, its fraction complete.
 final class ModelStore {
@@ -84,6 +100,8 @@ final class ModelStore {
     var whisperFile: URL { support.appendingPathComponent("whisper.bin") }
     var ggufFile: URL { support.appendingPathComponent(cleanup.file) }
     var store: URL { support.appendingPathComponent("models-v1") }
+    /// The pid of the Ollama server the last launch spawned, so a launch after a crash can find it.
+    var ollamaPidFile: URL { support.appendingPathComponent("run/ollama.pid") }
     private var whisperStamp: URL { support.appendingPathComponent("whisper.bin.sha256") }
     private var ggufStamp: URL { support.appendingPathComponent(cleanup.file + ".sha256") }
     private var wrapperStamp: URL { store.appendingPathComponent(".bellow-wrapper") }
@@ -160,20 +178,45 @@ final class ModelStore {
         try sha256.write(to: stamp, atomically: true, encoding: .utf8)
     }
 
-    /// Starts the private Ollama server on our store and waits until it answers.
-    func startOllama(binary: URL, environment: [String: String], log: FileHandle?) async throws -> Process {
-        if await ollamaResponds(endpoint, "/api/version") { throw ModelError("Port 11439 is already in use. Quit the other Bellow instance or listener and retry.") }
+    /// The server an earlier launch left on the port, if the pid it recorded is still running the
+    /// bundled binary. It was started with our environment, so it serves our store; anything else
+    /// answering on the port is someone else's.
+    func leftoverOllama(binary: URL) -> OllamaServer? {
+        guard let text = try? String(contentsOf: ollamaPidFile, encoding: .utf8),
+              let pid = pid_t(text.trimmingCharacters(in: .whitespacesAndNewlines)), pid > 0,
+              let path = executablePath(of: pid),
+              URL(fileURLWithPath: path).resolvingSymlinksInPath().path == binary.resolvingSymlinksInPath().path else { return nil }
+        return .adopted(pid)
+    }
+
+    /// Starts the private Ollama server on our store and waits until it answers, or adopts the one a
+    /// crashed launch left behind rather than failing on the busy port.
+    func startOllama(binary: URL, environment: [String: String], log: FileHandle?) async throws -> OllamaServer {
+        if await ollamaResponds(endpoint, "/api/version") {
+            if let leftover = leftoverOllama(binary: binary) { return leftover }
+            throw ModelError("Port 11439 is already in use by something other than Bellow's engine. Quit that listener and retry.")
+        }
         try fm.createDirectory(at: store, withIntermediateDirectories: true)
         let p = Process(); p.executableURL = binary; p.arguments = ["serve"]; p.environment = environment
         p.standardOutput = log ?? FileHandle.nullDevice; p.standardError = log ?? FileHandle.nullDevice; p.standardInput = FileHandle.nullDevice
         try p.run()
+        try? fm.createDirectory(at: ollamaPidFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? String(p.processIdentifier).write(to: ollamaPidFile, atomically: true, encoding: .utf8)
         for _ in 0..<120 {
             guard p.isRunning else { throw ModelError("The bundled Ollama engine exited. See engine.log.") }
-            if await ollamaResponds(endpoint, "/api/version") { return p }
+            if await ollamaResponds(endpoint, "/api/version") { return .spawned(p) }
             try await Task.sleep(nanoseconds: 250_000_000)
         }
-        p.terminate()
+        stopOllama(.spawned(p))
         throw ModelError("Ollama did not become ready within 30 seconds.")
+    }
+
+    /// Asks the server to quit, forces it after three seconds, and forgets its pid.
+    func stopOllama(_ server: OllamaServer) {
+        try? fm.removeItem(at: ollamaPidFile)
+        guard server.isRunning else { return }
+        server.terminate()
+        DispatchQueue.global().asyncAfter(deadline: .now() + 3) { if server.isRunning { kill(server.pid, SIGKILL) } }
     }
 
     /// Builds the wrapper from the bundled Modelfile on the verified weights. The GGUF is hard-linked
