@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bellow</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="theme-color" content="#b5471f">
+<meta property="og:title" content="Bellow">
+<meta property="og:description" content="Free, open-source, fully local dictation for Apple Silicon Macs.">
+<meta property="og:image" content="https://xuancongwen.github.io/bellow/favicon-512.png">
+<meta name="description" content="Bellow is a free, open-source dictation app for Apple Silicon Macs. Press a shortcut, speak, and clean text is typed wherever you are. Everything runs on your Mac.">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1c1b18; --muted: #6b675e; --line: #e4e0d6;
+    --accent: #b5471f; --code-bg: #f1eee6; --card: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15140f; --fg: #ece8de; --muted: #a39e91; --line: #2c2a23; --accent: #f08a5d; --code-bg: #1f1d16; --card: #1b1a14; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 56px 16px 80px; }
+  h1 { font-size: 2.6rem; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.35rem; margin: 48px 0 12px; }
+  p { margin: 0 0 14px; }
+  .lead { font-size: 1.2rem; color: var(--muted); }
+  a { color: var(--accent); }
+  .kbd { font: 600 0.9em ui-monospace, "SF Mono", Menlo, monospace; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  pre { position: relative; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 96px 16px 16px; overflow-x: auto; font: 15px/1.5 ui-monospace, "SF Mono", Menlo, monospace; margin: 0 0 14px; }
+  pre.big { font-size: 16px; }
+  button.copy { position: absolute; top: 10px; right: 10px; font: 600 13px -apple-system, sans-serif; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button.copy:hover { border-color: var(--accent); }
+  ol, ul { padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .steps li strong { display: block; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  td { padding: 8px 10px 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { width: 110px; color: var(--muted); }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
+  .callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--muted); }
+  nav a { margin-right: 18px; font-size: 0.95rem; }
+  a.button { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 20px; border-radius: 10px; }
+  a.button:hover { filter: brightness(1.08); }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="#install">Install</a><a href="#manual">Terminal install</a><a href="#requirements">Requirements</a><a href="https://github.com/xuancongwen/bellow">Source on GitHub</a></nav>
+  <h1 style="margin-top:32px">Bellow</h1>
+  <p class="lead">Free, open-source dictation for your Mac. Press <span class="kbd">⌃⌥X</span>, speak, press it again, and clean English text is typed into whatever app you are using.</p>
+  <p>Everything runs on your Mac. No account, no API key, no network access after the one-time model download, and no transcripts leave the machine. Whisper transcribes, a local language model tidies up the wording, and the result is typed for you.</p>
+  <p class="meta" id="version">Latest release: <a href="https://github.com/xuancongwen/bellow/releases">see GitHub</a></p>
+
+  <h2 id="install">Install</h2>
+  <p>The app is a small download. It fetches its speech and cleanup models (2 to 3.4 GB, once) the first time you start it.</p>
+  <p><a class="button" id="download" href="https://github.com/xuancongwen/bellow/releases">Download Bellow for Apple Silicon</a></p>
+  <ol class="steps">
+    <li>Open the downloaded <code>.dmg</code> and drag <strong>Bellow</strong> into <strong>Applications</strong>.</li>
+    <li>Open <strong>Bellow</strong> from Applications. It is signed and notarized by Apple, so it opens without a security warning.</li>
+    <li>In the setup window, allow <strong>Microphone</strong> and <strong>Accessibility</strong> when macOS asks, and click <strong>Start</strong>.</li>
+    <li>Wait for the status to read <strong>Ready</strong> while the models download. If the download is interrupted, click Start again and it resumes.</li>
+    <li>Click into any text field, press <span class="kbd">⌃⌥X</span>, talk, and press it again.</li>
+  </ol>
+
+  <h2 id="manual">Prefer the terminal?</h2>
+  <p>This one line downloads the app, verifies its checksum, puts it in Applications, and opens it:</p>
+  <pre class="big"><code id="oneliner">curl -fsSL https://xuancongwen.github.io/bellow/install.sh | bash</code><button class="copy" data-for="oneliner">Copy</button></pre>
+  <p class="callout">You can <a href="https://github.com/xuancongwen/bellow/blob/master/scripts/install.sh">read the script</a> first. To check a manual download instead, get the <code>.dmg.sha256</code> file next to the DMG on the <a href="https://github.com/xuancongwen/bellow/releases">releases page</a> and run:</p>
+  <pre><code id="manual-cmd">cd ~/Downloads
+shasum -a 256 -c Bellow-1.0.0-rc.7-macOS-arm64.dmg.sha256</code><button class="copy" data-for="manual-cmd">Copy</button></pre>
+
+  <h2 id="requirements">Requirements</h2>
+  <table>
+    <tr><td>Mac</td><td>Apple Silicon (M1 or newer). Intel Macs are not supported.</td></tr>
+    <tr><td>macOS</td><td>13 Ventura or newer</td></tr>
+    <tr><td>Memory</td><td>8 GB minimum. Macs with more than 16 GB get the larger Max cleanup model; the app will not load its models below 8 GB.</td></tr>
+    <tr><td>Disk</td><td>About 6 GB free for the models the app downloads on first start</td></tr>
+  </table>
+
+  <h2>Using it</h2>
+  <ul>
+    <li>Recording is a toggle: press <span class="kbd">⌃⌥X</span> to start and again to stop. Recordings stop on their own at two minutes.</li>
+    <li>Stay in the same window while the text is being typed.</li>
+    <li>Quit from the menu bar icon when you want the memory back.</li>
+  </ul>
+
+  <h2>Uninstall</h2>
+  <p>Quit Bellow, drag it from Applications to the Trash, and delete <code>~/Library/Application Support/Bellow</code> to remove the models.</p>
+
+  <h2>Open source</h2>
+  <p>Bellow's code is <a href="https://github.com/xuancongwen/bellow/blob/master/LICENSE">MIT licensed</a> and built on other open projects, all under permissive licenses: <a href="https://github.com/peteonrails/voxtype">VoxType</a> (MIT), <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> (MIT) with OpenAI's Whisper large-v3-turbo weights (MIT), <a href="https://github.com/ollama/ollama">Ollama</a> (MIT), and Qwen2.5-7B-Instruct (Apache 2.0). The full list with copyright holders is in <a href="https://github.com/xuancongwen/bellow/blob/master/THIRD-PARTY-NOTICES.md">THIRD-PARTY-NOTICES.md</a>, and the app carries every license text inside its bundle. Bugs and ideas go to the <a href="https://github.com/xuancongwen/bellow/issues">issue tracker</a>.</p>
+
+  <footer>Bellow · <a href="https://github.com/xuancongwen/bellow">GitHub</a> · <a href="https://github.com/xuancongwen/bellow/releases">Releases</a></footer>
+</main>
+<script>
+  document.querySelectorAll('button.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var text = document.getElementById(b.dataset.for).textContent;
+      navigator.clipboard.writeText(text).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); });
+    });
+  });
+  fetch('https://api.github.com/repos/xuancongwen/bellow/releases?per_page=1')
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (list) {
+      if (!list.length) return;
+      var rel = list[0], el = document.getElementById('version');
+      el.innerHTML = 'Latest release: <a href="' + rel.html_url + '">' + rel.tag_name + '</a>' + (rel.prerelease ? ' (release candidate)' : '');
+      var m = /^v(.+)$/.exec(rel.tag_name);
+      if (m) document.getElementById('manual-cmd').textContent = document.getElementById('manual-cmd').textContent.split('1.0.0-rc.7').join(m[1]);
+      var dmg = (rel.assets || []).filter(function (a) { return /\.dmg$/.test(a.name); })[0];
+      if (dmg) {
+        var b = document.getElementById('download');
+        b.href = dmg.browser_download_url;
+        b.textContent = 'Download Bellow ' + rel.tag_name + ' for Apple Silicon (' + Math.round(dmg.size / 1e6) + ' MB)';
+      }
+    }).catch(function () {});
+</script>
+</body>
+</html>
