@@ -499,7 +499,6 @@ final class Delegate: NSObject, NSApplicationDelegate {
     var item: NSStatusItem!
     var window: NSWindow!
     let hotkey = HotkeyRegistrar()
-    var readyObserver: AnyCancellable?
     var toggleItem: NSMenuItem?
     func applicationDidFinishLaunching(_ notification: Notification) {
         let siblings = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "org.bellow.app")
@@ -517,12 +516,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
         window.title = "Bellow"; window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: SetupView(model: model))
         window.setContentSize(NSSize(width: 530, height: 640)); window.center()
-        // The app has no Dock icon, so the setup window must stay reachable while the user is
-        // in System Settings; otherwise it drops behind everything and looks like it closed.
-        window.level = .floating
+        // Ordinary window level: a floating window sits above the system's permission prompts and
+        // hides them. The app has no Dock icon, so the window may drop behind System Settings, but
+        // it comes back through the menu bar item and whenever the app is activated (below).
         window.hidesOnDeactivate = false
         model.onSetupNeeded = { [weak self] in self?.showSetup() }
-        readyObserver = model.$ready.sink { [weak self] ready in self?.window.level = ready ? .normal : .floating }
         NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
             guard let self = self, !self.model.ready else { return }
             self.window.makeKeyAndOrderFront(nil)
